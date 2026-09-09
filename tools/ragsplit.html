@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAGSplit — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+
+/* ---- tool specific ---- */
+.seghead{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.seghead h3{margin:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:5px 11px;font-size:12px;background:transparent}
+.seg button.on{background:var(--accent);color:#fff}
+.chunk{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;margin-bottom:12px}
+.chunk .ch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.chunk .idx{font-size:12px;font-weight:700;color:var(--accent);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.chunk .meta{font-size:11.5px;color:var(--muted)}
+.chunk .crumb{font-size:11.5px;color:var(--blue);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.chunk .body{font-size:12.5px;line-height:1.62;white-space:pre-wrap;word-break:break-word;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:220px;overflow:auto}
+.chunk.over{border-color:var(--bad)}
+mark{background:var(--accent-soft);color:inherit;border-bottom:2px solid var(--accent);padding:0 1px;border-radius:2px}
+.hist{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.hrow{display:flex;align-items:center;gap:8px;font-size:11.5px}
+.hrow .hl{width:78px;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.hrow .hb{flex:1;height:11px;background:var(--bg);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.hrow .hf{height:100%;background:var(--accent);opacity:.85}
+.hrow .hn{width:52px;text-align:right;color:var(--muted)}
+.empty{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of RAGSplit. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/ragsplit" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get RAGSplit — $19</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>RAGSplit</h1>
+  <span class="tag">See your chunks before you ship them</span>
+  <span class="tag">no upload</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="panel">
+  <div class="seghead">
+    <h3>Document</h3>
+    <span class="spacer"></span>
+    <button class="mini" id="btnSample">Load sample doc</button>
+    <button class="mini" id="btnClear">Clear</button>
+    <input type="file" id="file" accept=".txt,.md,.markdown,.text" style="display:none">
+    <button class="mini" id="btnFile">Open .txt / .md</button>
+  </div>
+  <textarea id="src" rows="12" spellcheck="false"></textarea>
+  <div class="stat" id="srcMeta" style="margin-top:8px"></div>
+</div>
+
+<div class="panel">
+  <h3>Chunking parameters</h3>
+  <div class="controls">
+    <div class="fld">
+      <label>Strategy</label>
+      <select id="strategy">
+        <option value="fixed">Fixed character window</option>
+        <option value="para">By paragraph</option>
+        <option value="sentence">By sentence</option>
+        <option value="md">By Markdown heading</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Chunk unit</label>
+      <select id="unit">
+        <option value="char">characters</option>
+        <option value="token">tokens (est.)</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Chunk size</label>
+      <input type="number" id="size" value="600" min="20" step="10">
+    </div>
+    <div class="fld">
+      <label>Overlap</label>
+      <input type="number" id="overlap" value="80" min="0" step="10">
+    </div>
+    <div class="fld">
+      <label>&nbsp;</label>
+      <button class="primary" id="btnRun">Split</button>
+    </div>
+  </div>
+  <div class="bar">
+    <span class="stat" id="stratHint"></span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Overview</h3>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2">
+    <div>
+      <h3 style="font-size:12px">Length distribution</h3>
+      <div class="hist" id="hist"></div>
+    </div>
+    <div>
+      <h3 style="font-size:12px">Embedding cost estimate</h3>
+      <table id="costTable"></table>
+      <div class="hint" style="margin-top:8px" id="costNote"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="seghead">
+    <h3>Chunks</h3>
+    <span class="spacer"></span>
+    <span class="stat">Overlap is highlighted</span>
+    <button class="mini" id="btnJson">Export JSON</button>
+  </div>
+  <div id="chunks"></div>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* ---------- token estimation (approximate) ---------- */
+var CJK_RE=/[\u3400-\u4dbf\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\uf900-\ufaff]/g;
+function estTokens(text){
+  if(!text)return 0;
+  var cjk=text.match(CJK_RE);
+  var nc=cjk?cjk.length:0;
+  var rest=text.length-nc;
+  return Math.max(1,Math.round(nc*0.6+rest*0.25));
+}
+function fmtCost(c){
+  if(c>0&&c<0.01)return "$"+c.toFixed(6).replace(/0+$/,"");
+  return money(c);
+}
+
+/* ---------- sample document ---------- */
+var SAMPLE=[
+"# Choosing a Chunking Strategy for Production RAG",
+"",
+"Retrieval-augmented generation looks simple on a whiteboard: embed your documents, store the vectors, retrieve the nearest neighbours, and let the model answer. In production, the single decision that moves quality the most is not which embedding model you pick. It is how you cut the text apart before it ever reaches the model.",
+"",
+"## Why chunk size changes everything",
+"",
+"A chunk is the unit of retrieval. If it is too small, it strips the context a sentence needs to be understood, and the embedding collapses toward generic meaning. Ask a question about a refund window and you retrieve three fragments that all mention refunds but none that mention the fourteen days. If the chunk is too large, the vector averages several unrelated ideas together, retrieval precision drops, and you pay to stuff the prompt with text the model never needed.",
+"",
+"The failure is rarely visible in a demo. It shows up weeks later as a support bot that answers confidently and wrongly, because the right sentence was sitting one paragraph away from the chunk that got retrieved.",
+"",
+"## Fixed-size windows and the overlap trade-off",
+"",
+"Sliding windows are the default for a reason: they are predictable, cheap, and easy to reason about. You pick a size, you pick an overlap, you walk the document. The overlap exists to stop a sentence that straddles a boundary from being destroyed. Set it to zero and you will eventually cut a definition in half and lose the term it defined.",
+"",
+"The cost is duplication. Twenty percent overlap means twenty percent more vectors to store, embed and search. Most teams land somewhere between ten and twenty percent, but the right number depends on how often your sentences cross the boundary, which depends on your text. Measure it instead of guessing: the highlight below shows exactly how much text is being repeated.",
+"",
+"## Paragraph and sentence splitting",
+"",
+"Splitting on natural boundaries produces chunks that read like prose, which tends to help both the embedding model and the human who has to debug a bad answer. Paragraph splitting is the cheapest version and works well on documentation that was written with real paragraphs.",
+"",
+"Sentence splitting goes further and is a better fit for dense reference material, but it needs care: abbreviations, decimals, code identifiers and numbered lists all contain periods. A naive split on the full stop will shred a technical document. If you go this route, keep a small minimum size so that fragments get merged back into something with enough signal to embed.",
+"",
+"## Markdown-aware splitting",
+"",
+"Technical documentation is already structured. Throwing the heading hierarchy away and cutting at character 800 discards information you paid an author to produce. Splitting on headings keeps each chunk inside one topic, and the heading path can be prepended to the chunk as a breadcrumb, which measurably improves retrieval on question-like queries.",
+"",
+"The catch is uneven sections. One heading might contain forty words and the next twelve hundred. You still need a fallback that sub-splits the long ones, otherwise your size histogram becomes meaningless and a single chunk swallows the whole context window.",
+"",
+"## What to measure before you ship",
+"",
+"Build the retrieval evaluation before you tune the splitter. Take fifty real questions, write down which document should answer each one, and score whether the right chunk appears in the top five. Then change one parameter at a time and re-run. Teams that tune chunk size by vibes ship regressions they cannot see.",
+"",
+"Track the size distribution, not just the mean. A mean of six hundred characters with a maximum of four thousand means some queries will be answered from a chunk that is mostly noise. Track the oversize count and drive it to zero, then look at whether the smallest chunks carry enough meaning to be retrieved at all.",
+"",
+"Finally, remember that chunking is downstream of extraction. If your PDF parser scrambles the reading order, no splitter will save you. Fix ingestion first, then chunk, then evaluate, then tune."
+].join("\n");
+
+/* ---------- unit scanners ---------- */
+function scanParagraphs(text){
+  var units=[],re=/\n[ \t]*\r?\n/g,m,last=0;
+  while((m=re.exec(text))!==null){
+    if(m.index>last)units.push({start:last,end:m.index});
+    last=m.index+m[0].length;
+  }
+  if(last<text.length)units.push({start:last,end:text.length});
+  return units.filter(function(u){return text.slice(u.start,u.end).trim().length>0;});
+}
+function scanSentences(text){
+  var units=[],n=text.length,s=0,i=0;
+  var brk=".!?。！？";
+  while(i<n){
+    var c=text.charAt(i);
+    if(c==="\n"){
+      if(i>s)units.push({start:s,end:i+1});
+      s=i+1;i++;continue;
+    }
+    if(brk.indexOf(c)>=0){
+      var j=i+1;
+      while(j<n&&/\s/.test(text.charAt(j))&&text.charAt(j)!=="\n")j++;
+      if(j>=n||text.charAt(j)==="\n"||/[A-Z0-9"“'([]/.test(text.charAt(j))){
+        if(j>s){units.push({start:s,end:j});s=j;i=j;continue;}
+      }
+    }
+    i++;
+  }
+  if(s<n)units.push({start:s,end:n});
+  return units.filter(function(u){return text.slice(u.start,u.end).trim().length>0;});
+}
+
+/* ---------- generic accumulator over units ---------- */
+function packUnits(text,units,cs,co){
+  var out=[],i=0;
+  while(i<units.length){
+    var j=i,end=units[i].end;
+    while(j+1<units.length&&(units[j+1].end-units[i].start)<=cs){j++;end=units[j].end;}
+    out.push({start:units[i].start,end:end});
+    if(j+1>=units.length)break;
+    var cut=end-co,ni=i+1;
+    while(ni<units.length&&units[ni].start<cut)ni++;
+    if(ni<=i)ni=i+1;
+    i=ni;
+  }
+  return out;
+}
+
+/* ---------- markdown ---------- */
+function scanMarkdown(text){
+  var lines=text.split("\n"),marks=[],pos=0;
+  for(var i=0;i<lines.length;i++){
+    var m=/^(#{1,6})\s+(.*)$/.exec(lines[i]);
+    if(m)marks.push({level:m[1].length,title:m[2].trim(),start:pos,line:i});
+    pos+=lines[i].length+1;
+  }
+  if(!marks.length)return null;
+  var secs=[],stack=[];
+  for(var k=0;k<marks.length;k++){
+    var mk=marks[k];
+    stack=stack.filter(function(s){return s.level<mk.level;});
+    stack.push(mk);
+    var end=(k+1<marks.length)?marks[k+1].start:text.length;
+    secs.push({
+      start:mk.start,end:end,
+      crumb:stack.map(function(s){return s.title;}).join(" › ")
+    });
+  }
+  return secs.filter(function(s){return text.slice(s.start,s.end).trim().length>0;});
+}
+
+/* ---------- main splitter ---------- */
+function splitDoc(text,strategy,cs,co){
+  text=text||"";
+  var out=[];
+  if(!text.trim())return out;
+  if(cs<20)cs=20;
+  if(co>=cs)co=Math.floor(cs/2);
+  if(strategy==="fixed"){
+    var step=cs-co;if(step<1)step=1;
+    var s=0,n=text.length;
+    while(s<n){
+      var e=Math.min(n,s+cs);
+      out.push({start:s,end:e,crumb:""});
+      if(e>=n)break;
+      s=e-co;
+    }
+  } else if(strategy==="md"){
+    var secs=scanMarkdown(text);
+    if(!secs){out=packUnits(text,scanParagraphs(text),cs,co);}
+    else{
+      secs.forEach(function(sec){
+        var body=text.slice(sec.start,sec.end);
+        if(estTokens(body)<=0)return;
+        if(body.length<=cs){
+          out.push({start:sec.start,end:sec.end,crumb:sec.crumb});
+        } else {
+          var sub=packUnits(text,scanParagraphs(text.slice(sec.start,sec.end)).map(function(u){
+            return {start:u.start+sec.start,end:u.end+sec.start};
+          }),cs,co);
+          if(!sub.length)sub=fixedRanges(sec.start,sec.end,cs,co);
+          sub.forEach(function(r){out.push({start:r.start,end:r.end,crumb:sec.crumb});});
+        }
+      });
+    }
+  } else {
+    var units=strategy==="sentence"?scanSentences(text):scanParagraphs(text);
+    if(!units.length)units=[{start:0,end:text.length}];
+    out=packUnits(text,units,cs,co);
+  }
+  return out;
+}
+function fixedRanges(start,end,cs,co){
+  var out=[],step=cs-co;if(step<1)step=1;
+  for(var s=start;s<end;s+=step){
+    var e=Math.min(end,s+cs);
+    out.push({start:s,end:e});
+    if(e>=end)break;
+  }
+  return out;
+}
+
+/* ---------- state + run ---------- */
+var CH=[];
+var PRICES=[{n:"Budget embedding",p:0.02},{n:"Mid-tier embedding",p:0.15},{n:"Premium embedding",p:1.25}];
+function run(){
+  var text=$("src").value;
+  var strategy=$("strategy").value, unit=$("unit").value;
+  var size=parseInt($("size").value,10)||600;
+  var overlap=parseInt($("overlap").value,10)||0;
+  if(overlap<0)overlap=0;
+  var totalChars=text.length, totalTok=estTokens(text);
+  LASTDOC=totalChars;
+  var ratio=totalTok>0?totalChars/totalTok:4;
+  var cs=unit==="token"?Math.round(size*ratio):size;
+  var co=unit==="token"?Math.round(overlap*ratio):overlap;
+  $("srcMeta").innerHTML=totalChars.toLocaleString("en-US")+" chars · "+
+    totalTok.toLocaleString("en-US")+" est. tokens · ≈"+num(ratio,2)+" chars/token";
+  var ranges=splitDoc(text,strategy,cs,co);
+  var prevEnd=-1;
+  CH=ranges.map(function(r,i){
+    var t=text.slice(r.start,r.end);
+    var ov=0;
+    if(i>0&&prevEnd>r.start)ov=Math.min(prevEnd,r.end)-r.start;
+    prevEnd=r.end;
+    return {index:i,text:t,char_start:r.start,char_end:r.end,
+      tokens:estTokens(t),crumb:r.crumb||"",overlapChars:ov};
+  });
+  renderKpis(size,unit,cs,co);
+  renderChunks();
+  renderHist();
+  renderCost();
+  $("stratHint").innerHTML=hintFor(strategy,cs,co,unit);
+}
+function hintFor(strategy,cs,co,unit){
+  var u=unit==="token"?"~"+cs+" chars (converted from tokens)":cs+" chars";
+  if(strategy==="fixed")return "Slides a "+u+" window with "+co+" chars of overlap. Predictable, but it cuts sentences in half.";
+  if(strategy==="para")return "Splits on blank lines, then packs whole paragraphs up to "+u+". Overlap re-includes the trailing paragraphs.";
+  if(strategy==="sentence")return "Splits on sentence terminators and newlines, packs up to "+u+". Better prose boundaries; watch out for abbreviations.";
+  return "Cuts on # headings, keeps the heading path as a breadcrumb, and sub-splits any section longer than "+u+".";
+}
+var LASTCS=600,LASTDOC=0;
+function renderKpis(size,unit,cs,co){
+  LASTCS=cs;
+  if(!CH.length){$("kpis").innerHTML='<div class="kpi"><div class="k">Chunks</div><div class="v">0</div></div>';return;}
+  var lens=CH.map(function(c){return c.text.length;});
+  var tot=lens.reduce(function(a,b){return a+b;},0);
+  var mx=Math.max.apply(null,lens),mn=Math.min.apply(null,lens);
+  var over=CH.filter(function(c){return c.text.length>cs;}).length;
+  var toks=CH.reduce(function(a,c){return a+c.tokens;},0);
+  function kpi(k,v,s,cls){
+    return '<div class="kpi"><div class="k">'+k+'</div><div class="v '+(cls||"")+'">'+v+"</div>"+
+      (s?'<div class="s">'+s+"</div>":"")+"</div>";
+  }
+  $("kpis").innerHTML=
+    kpi("Chunks",CH.length,CH.length+" vectors to store")+
+    kpi("Avg length",Math.round(tot/CH.length)+"","chars · ~"+Math.round(toks/CH.length)+" tok")+
+    kpi("Max / min",mx+" / "+mn,"spread of "+(mx-mn))+
+    kpi("Oversize",over+"",over?"exceeds "+cs+" chars":"none over limit",over?"bad":"good")+
+    kpi("Total tokens",toks.toLocaleString("en-US"),"approximate")+
+    kpi("Duplication",(tot>0?num(Math.max(0,tot-LASTDOC)/tot*100,1):"0")+"%","from overlap");
+}
+function renderChunks(){
+  var box=$("chunks");
+  if(!CH.length){box.innerHTML='<div class="empty">Paste a document or load the sample, then press Split.</div>';return;}
+  box.innerHTML=CH.map(function(c){
+    var ov=c.overlapChars;
+    var head=ov>0?esc(c.text.slice(0,ov)):"";
+    var rest=esc(ov>0?c.text.slice(ov):c.text);
+    var overCls=c.text.length>LASTCS?" over":"";
+    return '<div class="chunk'+overCls+'">'+
+      '<div class="ch"><span class="idx">#'+c.index+"</span>"+
+      (c.crumb?'<span class="crumb">'+esc(c.crumb)+"</span>":"")+
+      '<span class="meta">'+c.text.length.toLocaleString("en-US")+" chars</span>"+
+      '<span class="meta">~'+c.tokens+" tokens</span>"+
+      '<span class="meta mono">['+c.char_start+"–"+c.char_end+"]</span>"+
+      (ov>0?'<span class="pill mid">overlap '+ov+" ch</span>":'<span class="pill ok">no overlap</span>')+
+      "</div>"+
+      '<div class="body">'+(head?'<mark>'+head+"</mark>":"")+rest+"</div></div>";
+  }).join("");
+}
+function renderHist(){
+  var box=$("hist");
+  if(!CH.length){box.innerHTML='<div class="empty">—</div>';return;}
+  var lens=CH.map(function(c){return c.text.length;});
+  var mn=Math.min.apply(null,lens),mx=Math.max.apply(null,lens);
+  if(mx===mn)mx=mn+1;
+  var B=10,bins=new Array(B).fill(0);
+  lens.forEach(function(l){
+    var b=Math.floor((l-mn)/(mx-mn)*B);
+    if(b>=B)b=B-1;if(b<0)b=0;bins[b]++;
+  });
+  var maxc=Math.max.apply(null,bins)||1;
+  box.innerHTML=bins.map(function(n,i){
+    var lo=Math.round(mn+(mx-mn)*i/B),hi=Math.round(mn+(mx-mn)*(i+1)/B);
+    return '<div class="hrow"><span class="hl">'+lo+"–"+hi+'</span>'+
+      '<span class="hb"><span class="hf" style="width:'+(n/maxc*100)+'%"></span></span>'+
+      '<span class="hn">'+n+"</span></div>";
+  }).join("");
+}
+function renderCost(){
+  var tb=$("costTable");
+  var toks=CH.reduce(function(a,c){return a+c.tokens;},0);
+  if(!toks){tb.innerHTML='<tr><td class="empty">—</td></tr>';$("costNote").textContent="";return;}
+  tb.innerHTML="<tr><th>Tier</th><th class='num'>Price / 1M tok</th><th class='num'>One-time embed</th><th class='num'>×10 re-index</th></tr>"+
+    PRICES.map(function(p){
+      var c=toks/1000000*p.p;
+      return "<tr><td>"+esc(p.n)+'</td><td class="num">'+money(p.p)+'</td><td class="num"><b>'+
+        fmtCost(c)+"</b></td><td class='num'>"+fmtCost(c*10)+"</td></tr>";
+    }).join("");
+  $("costNote").innerHTML="Based on <b>"+toks.toLocaleString("en-US")+"</b> estimated tokens. "+
+    "<b>Prices change often — always check the provider's current pricing page.</b> "+
+    "Token counts here are an approximation, not a real tokenizer run.";
+}
+
+/* ---------- wiring ---------- */
+$("btnRun").onclick=function(){run();};
+$("btnSample").onclick=function(){$("src").value=SAMPLE;run();toast("Sample document loaded");};
+$("btnClear").onclick=function(){$("src").value="";CH=[];run();};
+$("strategy").onchange=function(){run();};
+$("unit").onchange=function(){run();};
+$("size").onchange=function(){run();};
+$("overlap").onchange=function(){run();};
+$("src").addEventListener("input",function(){
+  clearTimeout(window._rt);window._rt=setTimeout(run,300);
+});
+$("btnFile").onclick=function(){$("file").click();};
+$("file").onchange=function(e){
+  var f=e.target.files&&e.target.files[0];
+  if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    $("src").value=String(fr.result||"");
+    run();toast("Loaded "+f.name+" locally");
+  };
+  fr.onerror=function(){toast("Could not read that file");};
+  fr.readAsText(f,"utf-8");
+};
+$("btnJson").onclick=function(){
+  if(!CH.length){toast("Nothing to export");return;}
+  var payload={
+    source:"RAGSplit (offline)",
+    strategy:$("strategy").value,
+    unit:$("unit").value,
+    size:parseInt($("size").value,10),
+    overlap:parseInt($("overlap").value,10),
+    token_estimate:"approximate: cjk*0.6 + other*0.25",
+    chunks:CH.map(function(c){
+      return {index:c.index,text:c.text,char_start:c.char_start,char_end:c.char_end,tokens:c.tokens,
+        breadcrumb:c.crumb||undefined,overlap_chars:c.overlapChars};
+    })
+  };
+  dl("ragsplit-chunks.json",JSON.stringify(payload,null,2),"application/json;charset=utf-8");
+};
+window.addEventListener("DOMContentLoaded",function(){
+  LASTDOC=SAMPLE.length;
+  if(!$("src").value.trim())$("src").value=SAMPLE;
+  run();
+});
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">RAGSplit is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$19</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/ragsplit" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get RAGSplit — $19</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
