@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JWTLens — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+
+/* ---- tool specific ---- */
+.banner{background:var(--accent-soft);border:1px solid var(--accent);border-left-width:4px;
+  border-radius:var(--radius);padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.55}
+.banner b{color:var(--accent)}
+.jkey{color:var(--blue)} .jstr{color:var(--good)} .jnum{color:var(--accent)}
+.jbool{color:var(--warn)} .jnull{color:var(--muted)}
+.check{display:flex;gap:11px;padding:10px 0;border-top:1px solid var(--line);align-items:flex-start}
+.check:first-child{border-top:none}
+.badge{flex:0 0 auto;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;
+  letter-spacing:.5px;margin-top:1px;min-width:52px;text-align:center}
+.badge.PASS{background:var(--accent-soft);color:var(--good)}
+.badge.WARN{background:var(--accent-soft);color:var(--warn)}
+.badge.FAIL{background:var(--accent-soft);color:var(--bad)}
+.badge.INFO{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.check .ct{flex:1}
+.check .ct .t{font-weight:600;font-size:13px}
+.check .ct .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:4px 11px;font-size:12px;background:transparent}
+.seg button.on{background:var(--accent);color:#fff}
+.seghead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.seghead h3{margin:0}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of JWTLens. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/jwtlens" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get JWTLens — $17</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>JWTLens</h1>
+  <span class="tag">Decode tokens without leaking them</span>
+  <span class="tag">no upload</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="banner">
+  <b>JWT is base64-encoded, NOT encrypted.</b> Anyone holding the token can read the payload —
+  in the browser, in a log file, in a support ticket. This page decodes it entirely inside this tab:
+  no network request, no analytics, no server.
+</div>
+
+<div class="panel">
+  <h3>Token</h3>
+  <textarea id="tok" rows="4" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi..."></textarea>
+  <div class="bar">
+    <button class="primary" id="btnDecode">Decode</button>
+    <button id="btnSample">Load example token</button>
+    <button id="btnClear">Clear</button>
+    <span class="stat" id="tokStat">Paste a compact JWS (three parts separated by dots).</span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Verify signature (optional)</h3>
+  <div class="controls">
+    <div class="fld" style="grid-column:span 2">
+      <label>HMAC secret or PEM public key — stays in this tab</label>
+      <input type="text" id="key" placeholder="your-256-bit-secret or -----BEGIN PUBLIC KEY-----">
+    </div>
+    <div class="fld"><label>&nbsp;</label><button class="primary" id="btnVerify">Verify</button></div>
+  </div>
+  <div id="verifyOut" class="hint" style="margin-top:11px">Enter a secret (HS256/384/512) or a PEM public key (RS256/ES256) and press Verify.</div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>Header</h3>
+    <div class="out" id="hdrOut"><span class="empty">—</span></div>
+  </div>
+  <div class="panel">
+    <div class="seghead">
+      <h3>Signature</h3>
+      <span class="spacer"></span>
+      <div class="seg" id="sigSeg">
+        <button data-fmt="b64" class="on">base64url</button>
+        <button data-fmt="hex">hex</button>
+      </div>
+    </div>
+    <div class="out" id="sigOut"><span class="empty">—</span></div>
+    <div class="stat" id="sigMeta" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="seghead">
+    <h3>Payload</h3>
+    <span class="spacer"></span>
+    <button class="mini" id="btnCopyPl">Copy payload JSON</button>
+  </div>
+  <div class="out" id="plOut" style="max-height:560px"><span class="empty">—</span></div>
+  <div class="stat" id="plMeta" style="margin-top:8px"></div>
+</div>
+
+<div class="panel">
+  <h3>Timestamps</h3>
+  <table id="tsTable"></table>
+  <div class="hint" id="tsHint" style="margin-top:8px"></div>
+</div>
+
+<div class="panel">
+  <div class="seghead">
+    <h3>Security check</h3>
+    <span class="spacer"></span>
+    <span class="stat" id="secSummary"></span>
+    <button class="mini" id="btnCopyMd">Copy report (Markdown)</button>
+    <button class="mini" id="btnDlMd">Download .md</button>
+  </div>
+  <div id="checks"><span class="empty">Decode a token to run the audit.</span></div>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* ---------- base64url <-> bytes ---------- */
+function b64urlToBytes(s){
+  s=String(s).replace(/-/g,"+").replace(/_/g,"/");
+  while(s.length%4)s+="=";
+  var bin=atob(s),a=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+  return a;
+}
+function bytesToB64url(a){
+  var s="";for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function bytesToHex(a){
+  var s="";for(var i=0;i<a.length;i++){var h=a[i].toString(16);s+=h.length<2?"0"+h:h;}
+  return s;
+}
+function b64urlToStr(s){
+  var a=b64urlToBytes(s);
+  if(typeof TextDecoder!=="undefined")return new TextDecoder("utf-8").decode(a);
+  var s2="";for(var i=0;i<a.length;i++)s2+=String.fromCharCode(a[i]);
+  return decodeURIComponent(escape(s2));
+}
+function strToB64url(s){
+  var b;
+  if(typeof TextEncoder!=="undefined")b=new TextEncoder().encode(s);
+  else{var u=unescape(encodeURIComponent(s));b=new Uint8Array(u.length);
+    for(var i=0;i<u.length;i++)b[i]=u.charCodeAt(i);}
+  return bytesToB64url(b);
+}
+
+/* ---------- json pretty + syntax colour ---------- */
+function jsonHtml(v){
+  var s;
+  try{s=JSON.stringify(v,null,2);}catch(e){return esc(String(v));}
+  if(s===undefined)return "";
+  return s.replace(/("(?:\\.|[^"\\])*"\s*:?)|(\btrue\b|\bfalse\b|\bnull\b)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+    function(m,str,lit,n){
+      if(str!==undefined){
+        var isKey=/:\s*$/.test(str);
+        var body=str.replace(/\s*:?\s*$/,"");
+        return '<span class="'+(isKey?"jkey":"jstr")+'">'+esc(body)+"</span>"+(isKey?str.slice(body.length):"");
+      }
+      if(lit!==undefined)return '<span class="jbool">'+m+"</span>";
+      return '<span class="jnum">'+m+"</span>";
+    });
+}
+
+/* ---------- time helpers ---------- */
+var TS_KEYS=["exp","iat","nbf","auth_time","updated_at","created_at","expires_at","iat_ms"];
+function relTime(unix){
+  var d=Math.round(unix-Date.now()/1000);
+  var past=d<0;d=Math.abs(d);
+  var u,v;
+  if(d<60){v=d;u="second";}
+  else if(d<3600){v=Math.round(d/60);u="minute";}
+  else if(d<86400){v=Math.round(d/3600);u="hour";}
+  else if(d<2592000){v=Math.round(d/86400);u="day";}
+  else if(d<31536000){v=Math.round(d/2592000);u="month";}
+  else{v=Math.round(d/31536000);u="year";}
+  var t=v+" "+u+(v===1?"":"s");
+  return past?t+" ago":"in "+t;
+}
+function fmtDate(unix){
+  var d=new Date(unix*1000);
+  if(isNaN(d.getTime()))return "—";
+  return d.toUTCString().replace("GMT","UTC");
+}
+
+/* ---------- state ---------- */
+var CUR=null;   /* {raw,parts,header,headerObj,payload,payloadObj,sigB64,sigBytes,alg} */
+var SIGFMT="b64";
+
+function parseToken(raw){
+  raw=String(raw||"").trim().replace(/^Bearer\s+/i,"").replace(/\s+/g,"");
+  if(!raw)throw new Error("Empty token.");
+  var parts=raw.split(".");
+  if(parts.length!==3&&parts.length!==5)throw new Error("Expected 3 (JWS) or 5 (JWE) dot-separated parts, got "+parts.length+".");
+  if(parts.length===5)throw new Error("This looks like an encrypted JWE (5 parts). JWTLens decodes signed JWS tokens only.");
+  var hdrObj=null,plObj=null,hdrErr=null,plErr=null;
+  try{hdrObj=JSON.parse(b64urlToStr(parts[0]));}catch(e){hdrErr=e.message;}
+  try{plObj=JSON.parse(b64urlToStr(parts[1]));}catch(e){plErr=e.message;}
+  var sigBytes=null;
+  try{sigBytes=b64urlToBytes(parts[2]);}catch(e){}
+  var plTxt="";try{plTxt=b64urlToStr(parts[1]);}catch(e){}
+  return {
+    raw:raw, parts:parts, headerObj:hdrObj, headerErr:hdrErr,
+    payloadObj:plObj, payloadErr:plErr, sigBytes:sigBytes,
+    payloadText:plTxt, payloadChars:plTxt.length,
+    payloadRawChars:parts[1].length,
+    alg:(hdrObj&&hdrObj.alg)||""
+  };
+}
+
+function render(){
+  var t=CUR;
+  if(!t){return;}
+  /* header */
+  $("hdrOut").innerHTML=t.headerObj?jsonHtml(t.headerObj)
+    :'<span class="bad">Could not parse header: '+esc(t.headerErr||"invalid base64url/JSON")+"</span>";
+  /* payload */
+  $("plOut").innerHTML=t.payloadObj?jsonHtml(t.payloadObj)
+    :'<span class="bad">Could not parse payload as JSON: '+esc(t.payloadErr||"invalid base64url")+"</span>";
+  var kb=(t.payloadRawChars/1024);
+  $("plMeta").innerHTML=t.payloadObj
+    ? t.payloadChars+" chars · "+t.payloadRawChars+" base64url chars (~"+num(kb,2)+" KB) · "+
+      Object.keys(t.payloadObj).length+" claims"
+    : "";
+  renderSig();
+  renderTimes();
+  renderChecks();
+}
+function renderSig(){
+  var t=CUR;if(!t)return;
+  if(!t.sigBytes||!t.sigBytes.length){
+    $("sigOut").innerHTML='<span class="empty">No signature segment.</span>';$("sigMeta").textContent="";return;
+  }
+  var txt=SIGFMT==="hex"?bytesToHex(t.sigBytes):t.parts[2];
+  $("sigOut").innerHTML='<span class="mono">'+esc(txt)+"</span>";
+  $("sigMeta").innerHTML=t.sigBytes.length+" bytes · "+(SIGFMT==="hex"?"hex":"base64url")+
+    " · alg <b>"+esc(t.alg||"?")+"</b>";
+}
+function renderTimes(){
+  var t=CUR,tb=$("tsTable");
+  if(!t||!t.payloadObj){tb.innerHTML="";$("tsHint").textContent="";return;}
+  var rows=[],found=0;
+  Object.keys(t.payloadObj).forEach(function(k){
+    var v=t.payloadObj[k];
+    var isTs=false;
+    if(TS_KEYS.indexOf(k)>=0&&typeof v==="number")isTs=true;
+    else if(typeof v==="number"&&v>1000000000&&v<4000000000&&/(_at|_time|exp|iat|nbf|ts)$/.test(k))isTs=true;
+    if(!isTs)return;
+    found++;
+    var now=Date.now()/1000,st="PASS",note="";
+    if(k==="exp"){ if(v<now){st="FAIL";note="expired";} else {st="PASS";} }
+    else if(k==="nbf"){ if(v>now){st="WARN";note="not yet valid";} }
+    else if(v>now+60){ st="INFO"; note="in the future"; }
+    var cls=st==="FAIL"?"no":(st==="WARN"?"mid":(st==="INFO"?"":"ok"));
+    rows.push("<tr><td class='mono'>"+esc(k)+"</td><td class='mono'>"+v+"</td><td>"+esc(fmtDate(v))+
+      '</td><td class="'+(st==="FAIL"?"bad":(st==="WARN"?"warn":""))+'">'+esc(relTime(v))+
+      (note?' <span class="hint">('+esc(note)+")</span>":"")+"</td>"+
+      '<td class="num"><span class="pill '+cls+'">'+(st==="INFO"?"INFO":st)+"</span></td></tr>");
+  });
+  tb.innerHTML=found?("<tr><th>Claim</th><th>Unix</th><th>UTC</th><th>Relative</th><th class='num'>Status</th></tr>"+rows.join(""))
+    :'<tr><td class="empty">No timestamp-like claims found (exp / iat / nbf / auth_time …).</td></tr>';
+  $("tsHint").textContent=found?"Times are rendered in your local timezone; the UTC column is absolute.":"";
+}
+
+/* ---------- security audit ---------- */
+var WEAK_SECRETS=["secret","secret1","password","passwd","123456","12345678","changeme","test",
+  "test123","admin","root","letmein","qwerty","jwt","jwtsecret","mysupersecret","your-256-bit-secret",
+  "your-secret","dev","development","supersecret","abc123","111111","token","key","private"];
+var PII_KEYS=["email","e_mail","mail","phone","phone_number","mobile","password","passwd","pwd",
+  "ssn","social_security","credit","card","credit_card","cvv","address","dob","birth","birthdate",
+  "secret","api_key","apikey","private_key","passport","ip","lat","lng"];
+function findPII(obj,path,out){
+  out=out||[];path=path||"";
+  if(obj&&typeof obj==="object"){
+    Object.keys(obj).forEach(function(k){
+      var p=path?path+"."+k:k,low=k.toLowerCase(),hit=false;
+      for(var i=0;i<PII_KEYS.length;i++){
+        if(low===PII_KEYS[i]||low.indexOf(PII_KEYS[i])>=0){hit=true;break;}
+      }
+      var v=obj[k];
+      if(hit&&v!==null&&typeof v!=="object")out.push(p);
+      else if(hit&&v!==null&&typeof v==="object")out.push(p);
+      if(v&&typeof v==="object")findPII(v,p,out);
+    });
+  }
+  return out;
+}
+function runChecks(){
+  var t=CUR,res=[];
+  if(!t)return res;
+  var now=Date.now()/1000, alg=String(t.alg||"").toUpperCase();
+  var pl=t.payloadObj||{}, key=$("key").value;
+
+  /* 1 alg none */
+  if(!t.alg){res.push({s:"WARN",t:"No <span class='mono'>alg</span> in header",
+    d:"The header does not declare an algorithm. Some libraries default to trusting the header, so a missing or spoofable alg is a real risk — always pin the expected algorithm server-side."});}
+  else if(alg==="NONE"){res.push({s:"FAIL",t:"alg = none — signature is not protected",
+    d:"The classic <b>alg=none</b> attack: an attacker strips the signature and rewrites the payload at will. Reject alg=none unconditionally and verify against an allow-list of algorithms."});}
+  else if(alg==="HS256"||alg==="HS384"||alg==="HS512"){
+    res.push({s:"INFO",t:"Symmetric algorithm "+esc(alg),
+      d:"Same key signs and verifies. Anyone with the key can mint tokens — keep it out of the client bundle and rotate it on a schedule."});
+  } else if(alg.indexOf("RS")===0||alg.indexOf("ES")===0||alg.indexOf("PS")===0){
+    res.push({s:"INFO",t:"Asymmetric algorithm "+esc(alg),
+      d:"Signed with a private key you do not hold. Paste the PEM public key above and press Verify to check the signature locally with WebCrypto."});
+  } else {
+    res.push({s:"WARN",t:"Unusual algorithm "+esc(alg),
+      d:"Not one of the common HS*/RS*/ES* families. Make sure your verifier explicitly allow-lists it."});
+  }
+
+  /* 2 weak secret */
+  if(/^HS/.test(alg)&&key){
+    var low=key.trim().toLowerCase();
+    if(WEAK_SECRETS.indexOf(low)>=0){
+      res.push({s:"FAIL",t:'Secret is a well-known value ("'+esc(key.trim())+'")',
+        d:"This string appears in every JWT tutorial and in wordlists. An attacker can forge tokens for your users in seconds. Generate ≥32 bytes of cryptographically random data instead."});
+    } else if(key.length<16){
+      res.push({s:"WARN",t:"Secret is only "+key.length+" characters",
+        d:"Short HMAC keys are brute-forceable offline, with no rate limit and no trace. Use at least 32 random bytes for HS256."});
+    } else if(!/[0-9]/.test(key)||!/[a-zA-Z]/.test(key)){
+      res.push({s:"WARN",t:"Secret looks low-entropy",
+        d:"A good secret mixes character classes and is machine-generated, not a phrase you can remember."});
+    } else {
+      res.push({s:"PASS",t:"Secret length "+key.length+" looks reasonable",
+        d:"Still make sure it is randomly generated and stored outside the codebase."});
+    }
+  }
+
+  /* 3 exp */
+  var exp=pl.exp, iat=pl.iat;
+  if(typeof exp!=="number"){
+    res.push({s:"WARN",t:"No <span class='mono'>exp</span> claim — token never expires",
+      d:"A credential that lives forever. If it leaks from a log, a backup or a screenshot, it stays valid for good. Always set exp, and keep it short for anything user-facing."});
+  } else if(exp<now){
+    res.push({s:"FAIL",t:"Token expired "+esc(relTime(exp)),
+      d:"Expired at "+esc(fmtDate(exp))+". Your verifier must reject this — check for clock skew between services if it is only just past."});
+  } else {
+    res.push({s:"PASS",t:"Expires "+esc(relTime(exp)),
+      d:"Valid until "+esc(fmtDate(exp))+"."});
+  }
+
+  /* 4 lifetime */
+  if(typeof exp==="number"&&typeof iat==="number"&&exp>iat){
+    var life=exp-iat, h=life/3600;
+    if(life>86400){
+      res.push({s:"WARN",t:"Valid for "+num(h,1)+" hours ("+num(life/86400,1)+" days)",
+        d:"Long-lived bearer tokens widen the window after a compromise. Prefer short access tokens (5–60 min) plus a refresh token you can revoke."});
+    } else {
+      res.push({s:"PASS",t:"Lifetime "+num(h,2)+" hours",
+        d:"Short-lived access token — good. Pair it with a revocable refresh token."});
+    }
+  }
+
+  /* 5 PII */
+  var pii=findPII(pl);
+  if(pii.length){
+    res.push({s:"WARN",t:"Payload contains "+pii.length+" possibly sensitive claim"+(pii.length===1?"":"s")+": "+esc(pii.slice(0,6).join(", "))+(pii.length>6?" …":""),
+      d:"<b>JWT is base64-encoded, not encrypted.</b> Everything above is plain text to anyone who sees the token — browser storage, proxy logs, error trackers, support tickets. Move personal data behind an API call, or use JWE if it must travel inside the token."});
+  } else {
+    res.push({s:"PASS",t:"No obvious PII claim names",
+      d:"Still remember: every claim here is readable by anyone holding the token."});
+  }
+
+  /* 6 size */
+  if(t.payloadRawChars>2048){
+    res.push({s:"WARN",t:"Payload is ~"+num(t.payloadRawChars/1024,2)+" KB",
+      d:"This rides along on every single request. Big tokens bloat headers, break proxy limits and cost you bandwidth at scale."});
+  } else {
+    res.push({s:"PASS",t:"Payload is "+t.payloadRawChars+" chars (~"+num(t.payloadRawChars/1024,2)+" KB)",
+      d:"Comfortably small for a per-request header."});
+  }
+
+  /* 7 iss / aud */
+  var missing=[];
+  if(!pl.iss)missing.push("iss");
+  if(!pl.aud)missing.push("aud");
+  if(missing.length){
+    res.push({s:"INFO",t:"No "+missing.join(" / ")+" claim",
+      d:"Without issuer and audience, a token minted for a different service can often be replayed against yours. Validate both on every request."});
+  } else {
+    res.push({s:"PASS",t:"Has iss and aud",
+      d:"Make sure your verifier actually checks them, not just that they exist."});
+  }
+
+  /* 8 jti / revocation */
+  if(!pl.jti){
+    res.push({s:"INFO",t:"No <span class='mono'>jti</span> — cannot revoke a single token",
+      d:"Without a token id you can only invalidate a user's whole session set. Add jti if you need per-token revocation."});
+  }
+  return res;
+}
+function renderChecks(){
+  var box=$("checks");
+  if(!CUR){box.innerHTML='<span class="empty">Decode a token to run the audit.</span>';$("secSummary").textContent="";return;}
+  var res=runChecks(),f=0,w=0,i=0;
+  res.forEach(function(r){if(r.s==="FAIL")f++;else if(r.s==="WARN")w++;else if(r.s==="INFO")i++;});
+  box.innerHTML=res.map(function(r){
+    return '<div class="check"><span class="badge '+r.s+'">'+r.s+"</span>"+
+      '<div class="ct"><div class="t">'+r.t+'</div><div class="d">'+r.d+"</div></div></div>";
+  }).join("");
+  $("secSummary").innerHTML=(f?'<b class="bad">'+f+" fail</b> · ":"")+(w?'<b class="warn">'+w+" warn</b> · ":"")+
+    (i?'<span class="hint">'+i+" info</span> · ":"")+(res.length-f-w-i)+" pass";
+}
+
+/* ---------- signature verification ---------- */
+function pemToBytes(pem){
+  var b64=pem.replace(/-----BEGIN[^-]*-----/g,"").replace(/-----END[^-]*-----/g,"").replace(/[\s\r\n]/g,"");
+  if(!b64)throw new Error("No base64 body found in the PEM block.");
+  return b64urlToBytes(b64.replace(/-/g,"+").replace(/_/g,"/"));
+}
+function algHash(alg){
+  if(alg==="HS256"||alg==="RS256"||alg==="ES256"||alg==="PS256")return "SHA-256";
+  if(alg==="HS384"||alg==="RS384"||alg==="ES384"||alg==="PS384")return "SHA-384";
+  if(alg==="HS512"||alg==="RS512"||alg==="ES512"||alg==="PS512")return "SHA-512";
+  throw new Error("Unsupported algorithm: "+alg);
+}
+async function signHmac(alg,secretB64,dataStr){
+  var key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secretB64),
+    {name:"HMAC",hash:algHash(alg)},false,["sign"]);
+  var sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(dataStr));
+  return new Uint8Array(sig);
+}
+async function verifyAsync(){
+  var t=CUR,out=$("verifyOut");
+  if(!t){toast("Decode a token first");return;}
+  var alg=String(t.alg||"").toUpperCase(), input=$("key").value;
+  var signingInput=t.parts[0]+"."+t.parts[1];
+  if(!alg||alg==="NONE"){
+    out.innerHTML='<span class="bad">✗ alg=none — there is no signature to verify.</span>';return;
+  }
+  if(!input.trim()){
+    out.innerHTML='<span class="warn">Enter the HMAC secret or a PEM public key first.</span>';return;
+  }
+  out.innerHTML='<span class="hint">Verifying…</span>';
+  try{
+    var ok=false,hexGot=bytesToHex(t.sigBytes||new Uint8Array(0));
+    if(/^HS/.test(alg)){
+      var mine=await signHmac(alg,input,signingInput);
+      ok=bytesToHex(mine)===hexGot;
+    } else if(/^(RS|PS|ES)/.test(alg)){
+      var bytes=pemToBytes(input),algo;
+      if(/^RS/.test(alg))algo={name:"RSASSA-PKCS1-v1_5",hash:algHash(alg)};
+      else if(/^PS/.test(alg))algo={name:"RSA-PSS",hash:algHash(alg)};
+      else algo={name:"ECDSA",namedCurve:"P-256"};
+      var pk=await crypto.subtle.importKey("spki",bytes,algo,false,["verify"]);
+      ok=await crypto.subtle.verify(algo,pk,t.sigBytes,new TextEncoder().encode(signingInput));
+    } else {
+      throw new Error("Cannot verify "+esc(alg)+" locally.");
+    }
+    out.innerHTML=ok
+      ? '<span class="good">✓ Signature is valid</span> <span class="hint">— '+esc(alg)+
+        " over header.payload matched the token's signature. The token was not tampered with (given this key).</span>"
+      : '<span class="bad">✗ Signature does NOT match</span> <span class="hint">— wrong key, wrong algorithm, or the payload was modified. Do not trust this token.</span>';
+    if(ok)renderChecks();
+  }catch(e){
+    out.innerHTML='<span class="bad">✗ Verification failed</span> <span class="hint">— '+esc(e&&e.message||String(e))+
+      ". For RS*/ES* tokens paste the full PEM public key including the BEGIN/END lines.</span>";
+  }
+}
+
+/* ---------- markdown report ---------- */
+function buildReport(){
+  var t=CUR;if(!t)return "";
+  var L=[];
+  L.push("# JWT report — JWTLens");
+  L.push("");
+  L.push("_Generated offline in the browser. No token data left this machine._");
+  L.push("");
+  L.push("## Header");
+  L.push("```json");
+  L.push(t.headerObj?JSON.stringify(t.headerObj,null,2):"(unparseable) "+(t.headerErr||""));
+  L.push("```");
+  L.push("");
+  L.push("## Payload");
+  L.push("```json");
+  L.push(t.payloadObj?JSON.stringify(t.payloadObj,null,2):"(unparseable) "+(t.payloadErr||""));
+  L.push("```");
+  L.push("");
+  L.push("> JWT is base64-encoded, NOT encrypted. Anyone with the token can read the payload above.");
+  L.push("");
+  var res=runChecks();
+  L.push("## Security check ("+res.filter(function(r){return r.s==="FAIL";}).length+" fail, "+
+    res.filter(function(r){return r.s==="WARN";}).length+" warn, "+
+    res.filter(function(r){return r.s==="INFO";}).length+" info)");
+  L.push("");
+  L.push("| Result | Finding | Detail |");
+  L.push("| --- | --- | --- |");
+  res.forEach(function(r){
+    var d=String(r.d).replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+    L.push("| "+r.s+" | "+String(r.t).replace(/<[^>]+>/g,"")+" | "+d.replace(/\|/g,"\\|")+" |");
+  });
+  L.push("");
+  if(t.payloadObj){
+    var rows=[];
+    Object.keys(t.payloadObj).forEach(function(k){
+      var v=t.payloadObj[k];
+      if(typeof v==="number"&&v>1000000000&&v<4000000000&&/(_at|_time|exp|iat|nbf|ts)$/.test(k)){
+        rows.push("- `"+k+"`: "+v+" → "+fmtDate(v)+" ("+relTime(v)+")");
+      }
+    });
+    if(rows.length){L.push("## Timestamps");L.push("");L.push(rows.join("\n"));L.push("");}
+  }
+  L.push("## Signature");
+  L.push("");
+  L.push("alg: `"+(t.alg||"?")+"`");
+  L.push("");
+  L.push("```");
+  L.push(t.parts[2]);
+  L.push("```");
+  L.push("");
+  L.push("---");
+  L.push("Token (redacted middle): `"+t.raw.slice(0,16)+"…"+t.raw.slice(-8)+"` — "+t.raw.length+" chars");
+  return L.join("\n");
+}
+
+/* ---------- sample token ---------- */
+async function makeToken(header,payload,secret){
+  var h=strToB64url(JSON.stringify(header)), p=strToB64url(JSON.stringify(payload));
+  var sig=await signHmac(header.alg,secret,h+"."+p);
+  return h+"."+p+"."+bytesToB64url(sig);
+}
+async function loadSample(){
+  var iat=Math.floor(Date.now()/1000);
+  var header={alg:"HS256",typ:"JWT"};
+  var payload={
+    iss:"https://auth.acme.dev",
+    aud:"acme-web",
+    sub:"usr_10241",
+    name:"张伟 (Wei Zhang) — 技术支持",
+    email:"wei.zhang@example.com",
+    phone:"+1-415-555-0142",
+    role:"admin",
+    plan:"pro",
+    scopes:["read","write","billing","admin:users"],
+    theme:"深色模式",
+    iat:iat,
+    nbf:iat,
+    exp:iat+30*86400,
+    auth_time:iat-120
+  };
+  try{
+    var tok=await makeToken(header,payload,"secret");
+    $("tok").value=tok;
+    $("key").value="secret";
+    decode();
+    await verifyAsync();
+    toast("Example token loaded (signed with \"secret\")");
+  }catch(e){
+    toast("Could not build example: "+(e.message||e));
+  }
+}
+
+/* ---------- wiring ---------- */
+function decode(){
+  var raw=$("tok").value;
+  if(!raw.trim()){
+    CUR=null;
+    $("hdrOut").innerHTML='<span class="empty">—</span>';
+    $("plOut").innerHTML='<span class="empty">—</span>';
+    $("sigOut").innerHTML='<span class="empty">—</span>';
+    $("sigMeta").textContent="";$("plMeta").textContent="";
+    $("tsTable").innerHTML="";$("tsHint").textContent="";
+    renderChecks();
+    $("tokStat").textContent="Paste a compact JWS (three parts separated by dots).";
+    $("verifyOut").textContent="Enter a secret (HS256/384/512) or a PEM public key (RS256/ES256) and press Verify.";
+    return;
+  }
+  try{
+    CUR=parseToken(raw);
+    $("tokStat").innerHTML="3 parts · "+CUR.raw.length+" chars · alg <b>"+esc(CUR.alg||"?")+"</b>";
+    render();
+    $("verifyOut").innerHTML=CUR.alg&&/^HS/.test(CUR.alg.toUpperCase())
+      ? '<span class="hint">Enter the HMAC secret above and press Verify to check the signature locally.</span>'
+      : '<span class="hint">Asymmetric token — paste the PEM public key and press Verify.</span>';
+  }catch(e){
+    CUR=null;
+    $("tokStat").innerHTML='<span class="bad">'+esc(e.message)+"</span>";
+    $("hdrOut").innerHTML='<span class="empty">—</span>';
+    $("plOut").innerHTML='<span class="empty">—</span>';
+    $("sigOut").innerHTML='<span class="empty">—</span>';
+    $("tsTable").innerHTML="";$("tsHint").textContent="";
+    renderChecks();
+  }
+}
+$("btnDecode").onclick=function(){decode();};
+$("btnVerify").onclick=function(){verifyAsync();};
+$("btnSample").onclick=function(){loadSample();};
+$("btnClear").onclick=function(){$("tok").value="";decode();};
+$("tok").addEventListener("input",function(){
+  clearTimeout(window._dt);window._dt=setTimeout(decode,250);
+});
+$("sigSeg").addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest("button"):null;
+  if(!b)return;
+  SIGFMT=b.getAttribute("data-fmt");
+  Array.prototype.forEach.call($("sigSeg").children,function(x){x.classList.remove("on");});
+  b.classList.add("on");
+  renderSig();
+});
+$("btnCopyPl").onclick=function(){
+  if(!CUR||!CUR.payloadObj){toast("Nothing to copy");return;}
+  copy(JSON.stringify(CUR.payloadObj,null,2),"Payload JSON");
+};
+$("btnCopyMd").onclick=function(){
+  if(!CUR){toast("Decode a token first");return;}
+  copy(buildReport(),"Markdown report");
+};
+$("btnDlMd").onclick=function(){
+  if(!CUR){toast("Decode a token first");return;}
+  dl("jwt-report.md",buildReport(),"text/markdown;charset=utf-8");
+};
+window.addEventListener("DOMContentLoaded",function(){
+  if(!$("tok").value.trim())loadSample();
+});
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">JWTLens is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$17</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/jwtlens" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get JWTLens — $17</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
