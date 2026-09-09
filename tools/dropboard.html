@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-page-node-id="ZEsorcMW8oAJaDsmzemjTj">
+<head data-page-node-id="h3XfFDexH4RWzZkuOi1Lnh">
+<meta charset="utf-8" data-page-node-id="g3iSRV9lUGSE0HoJ8B7GKb">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="b26s3gv73XEVMqQoeL15Cn">
+<title>DropBoard — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --blue:#378add;
+  --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+#drop{border:2px dashed var(--line);border-radius:var(--radius);padding:34px 20px;text-align:center;
+  background:var(--panel);transition:.15s}
+#drop.over{border-color:var(--accent);background:var(--accent-soft)}
+#drop h2{margin:0 0 6px;font-size:16px;font-weight:600}
+#drop p{margin:0;color:var(--muted);font-size:13px}
+#drop .row{margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:16px}
+.panel h3{margin:0 0 12px;font-size:14px;font-weight:600}
+
+#controls{display:none;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+select,input[type=text],input[type=number]{font:inherit;font-size:13px;padding:6px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:110px}
+input[type=range]{width:150px;accent-color:var(--accent)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:24px;font-weight:600;margin-top:4px;letter-spacing:-.5px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:16px;margin-top:16px}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.chart .ttl{font-size:13px;font-weight:600;margin-bottom:2px}
+.chart .sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.axis{stroke:var(--line);stroke-width:1}
+.gl{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3;opacity:.7}
+.tx{fill:var(--muted);font-size:11px}
+.bar{fill:var(--blue);transition:.15s}
+.bar:hover{fill:var(--accent)}
+.dot{fill:var(--panel);stroke:var(--accent);stroke-width:2}
+
+.tblwrap{overflow:auto;max-height:420px;margin-top:16px;border:1px solid var(--line);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 11px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel);font-weight:600;z-index:1;cursor:pointer;user-select:none}
+th:hover{color:var(--accent)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+th.n{text-align:right}
+
+.foot{margin-top:22px;color:var(--muted);font-size:12px;text-align:center}
+.err{background:#fcebeb;color:#a32d2d;border:1px solid #f7c1c1;padding:10px 14px;border-radius:8px;margin-top:12px;font-size:13px}
+html[data-theme="dark"] .err{background:#2a1717;color:#f09595;border-color:#501313}
+</style>
+</head>
+<body data-page-node-id="aEuR44fRcG8szYsCssBmT3">
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of DropBoard. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/ezzks" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get DropBoard — $19</a>
+  </div>
+</div>
+
+<div class="wrap" data-page-node-id="60fmZZWxESMdO6r8NeDnsb">
+<header data-page-node-id="FPNuCS8gZzGuhst5OD1cwL">
+  <h1 data-page-node-id="PaN2F82XDmT7nwsspFqQZH">DropBoard</h1>
+  <span class="tag" data-page-node-id="Y65fHSXrE8JtM9TVNrWqJn">CSV → dashboard</span>
+  <span class="tag" data-page-node-id="y6LlGWYCnkxkERWHIP1n9D">offline · no upload</span>
+  <div class="spacer" data-page-node-id="oPERoTTHFO5jD4AJJtHToO"></div>
+  <button id="theme" data-page-node-id="2IrRBWOvTucrfTWK1OOdix">Dark</button>
+  <button id="demo" data-page-node-id="B866ciIzOMv7pOnZMCCWy1">Load sample</button>
+</header>
+
+<div id="drop" data-page-node-id="amzyQJuACNjlaMYSmgyYHe">
+  <h2 data-page-node-id="iL8ZAsvR8FWJqa9zkDpKio">Drop a CSV file</h2>
+  <p data-page-node-id="N3gzgdBOht2yH9Xw5NSACM">Or paste data below. Everything runs in your browser — nothing is uploaded anywhere.</p>
+  <div class="row" data-page-node-id="WZvwApYMx9m3ZTcHLVKZfH">
+    <button class="primary" id="pick" data-page-node-id="8cuW0G42du7VeYN1r5DYY1">Choose file</button>
+    <button id="pasteBtn" data-page-node-id="9T3PFC9IxEQrfZm0fuwWWs">Paste data</button>
+  </div>
+  <input type="file" id="file" accept=".csv,.tsv,.txt" hidden data-page-node-id="1aqvrTDKbme6uFUyIwksDi">
+  <div id="pasteBox" style="display:none;margin-top:14px" data-page-node-id="BpUp2TSTZj6liQtSfSUbVJ">
+    <textarea id="paste" rows="6" style="width:100%;font:inherit;font-size:12.5px;padding:10px;
+      border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical"
+      placeholder="name,region,revenue,date&#10;Acme,East,1200,2026-01-04"></textarea>
+    <div style="margin-top:8px" data-page-node-id="aPO69pSuyB8rhBitBuKmCO"><button class="primary" id="loadPaste" data-page-node-id="qXOHuSON1sCkvnJBDs6GBl">Parse</button></div>
+  </div>
+</div>
+<div id="err" data-page-node-id="pbexR31VyZrBZ1AuFRNODM"></div>
+
+<div id="app" style="display:none" data-page-node-id="VetxzjpDyHVBEJ9hUfBGJ0">
+  <div class="panel" data-page-node-id="jPvmEeLnaHDZUZ8T0ubtHB">
+    <h3 data-page-node-id="bbd3iAUKCJaGYSI94uktVj">Filter</h3>
+    <div id="controls" data-page-node-id="3909bzVNYK6mdZ7dapzluy"></div>
+  </div>
+  <div class="kpis" id="kpis" data-page-node-id="AZGpO9xE4eluXO6kl5disC"></div>
+  <div class="charts" id="charts" data-page-node-id="YHrWhGILtg2W5BGQfesX3Q"></div>
+  <div class="panel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" data-page-node-id="R9OX1AvDqfMjUacbNA8ECE">
+    <button id="png" data-page-node-id="y7GaTYO4jD6WMRvhvew6al">Export PNG</button>
+    <button id="html" data-page-node-id="Qy5Em8N53KDVpkcAbYsIvG">Export standalone HTML</button>
+    <button id="csv" data-page-node-id="Og9Fv91hrxlEqvq9hl7B5P">Export filtered CSV</button>
+    <div class="spacer" data-page-node-id="hk2xqj05HHqJ26Dm7txOWM"></div>
+    <span id="stat" style="font-size:12px;color:var(--muted)" data-page-node-id="ihm24J0o7CKjpY7Klr1HH0"></span>
+  </div>
+  <div class="tblwrap" data-page-node-id="H58Ee3tvZFzC57byyCuWAy"><table id="tbl" data-page-node-id="Yb3O4PdLPQ6KqJgXfAi3z2"></table></div>
+</div>
+
+<div class="foot" data-page-node-id="y8yiEJCnyQzpPnPEwSAvKC">DropBoard · single file · zero dependencies · your data never leaves this page</div>
+</div>
+
+<script>
+"use strict";
+const __ORIG = document.documentElement.outerHTML;
+/* ---------- CSV parsing ---------- */
+function sniffDelim(line){
+  const c=[",",";","\t","|"];
+  let best=",",n=0;
+  for(const d of c){const k=(line.match(new RegExp("\\"+d,"g"))||[]).length; if(k>n){n=k;best=d;}}
+  return best;
+}
+function parseCSV(text){
+  text = text.replace(/^\uFEFF/,"").replace(/\r\n?/g,"\n");
+  if(!text.trim()) return {rows:[],cols:[]};
+  const delim = sniffDelim(text.split("\n")[0]);
+  let rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; }
+      else cur+=ch;
+    } else if(ch==='"') q=true;
+    else if(ch===delim){ row.push(cur); cur=""; }
+    else if(ch==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+    else cur+=ch;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  rows = rows.filter(r=>r.some(c=>c.trim()!==""));
+  if(!rows.length) return {rows:[],cols:[]};
+  const cols = rows[0].map((h,i)=>String(h||"").trim()||("col"+(i+1)));
+  const objs=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i], o={};
+    cols.forEach((c,j)=>o[c]= r[j]!==undefined? r[j].trim() : "");
+    objs.push(o);
+  }
+  return {rows:objs, cols};
+}
+
+/* ---------- type inference ---------- */
+function toNum(s){
+  if(s==null) return NaN;
+  let t=String(s).trim().replace(/[,_\s]/g,"");
+  if(!t) return NaN;
+  let neg=false;
+  const m=t.match(/^\((.*)\)$/); if(m){neg=true;t=m[1];}
+  if(/%$/.test(t)){ t=t.slice(0,-1); }
+  if(/^[¥$€£]/.test(t)) t=t.slice(1);
+  if(!/^-?\d*\.?\d+(e[-+]?\d+)?$/i.test(t)) return NaN;
+  const v=parseFloat(t);
+  return isNaN(v)?NaN:(neg?-v:v);
+}
+function toDate(s){
+  if(s==null) return null;
+  const t=String(s).trim();
+  if(!t) return null;
+  let m=t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if(m){const d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d)?null:d;}
+  m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  if(m){const d=new Date(+m[3],+m[1]-1,+m[2]);return isNaN(d)?null:d;}
+  const d=new Date(t);
+  return isNaN(d)?null:d;
+}
+function infer(cols,rows){
+  const sample=rows.slice(0,Math.min(rows.length,400));
+  return cols.map(c=>{
+    let num=0,dat=0,tot=0;
+    for(const r of sample){
+      const v=r[c]; if(v===""||v==null) continue;
+      tot++;
+      if(!isNaN(toNum(v))) num++;
+      else if(toDate(v)) dat++;
+    }
+    const ratio=tot? num/tot:0, dr=tot? dat/tot:0;
+    let type="text";
+    if(tot && ratio>=0.85) type="number";
+    else if(tot && dr>=0.8) type="date";
+    const vals=new Set(sample.map(r=>r[c]));
+    return {name:c,type,distinct:vals.size,card:tot? vals.size/tot : 0};
+  });
+}
+
+/* ---------- formatting ---------- */
+function fmt(n){
+  if(n==null||isNaN(n)) return "—";
+  const a=Math.abs(n);
+  if(a>=1e9) return (n/1e9).toFixed(2)+"B";
+  if(a>=1e6) return (n/1e6).toFixed(2)+"M";
+  if(a>=1e4) return (n/1e3).toFixed(1)+"k";
+  if(Number.isInteger(n)) return n.toLocaleString();
+  return n.toFixed(a<1?3:2);
+}
+function fmtFull(n){
+  if(n==null||isNaN(n)) return "—";
+  return Number.isInteger(n)? n.toLocaleString() : n.toLocaleString(undefined,{maximumFractionDigits:2});
+}
+function dstr(d){ return d? d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") : "—"; }
+
+/* ---------- state ---------- */
+let RAW=[], COLS=[], META=[], VIEW=[], SORT=null, SORTDIR=1;
+const F={};
+
+/* ---------- pipeline ---------- */
+function load(text){
+  const {rows,cols}=parseCSV(text);
+  if(!cols.length||!rows.length){ fail("No rows found. Check the file is a valid CSV/TSV."); return; }
+  RAW=rows; COLS=cols; META=infer(cols,rows);
+  COLS.forEach(c=>delete F[c]);
+  SORT=null;
+  document.getElementById("err").innerHTML="";
+  buildControls();
+  apply();
+  document.getElementById("app").style.display="";
+}
+function fail(msg){
+  document.getElementById("err").innerHTML='<div class="err">'+msg+"</div>";
+}
+function apply(){
+  VIEW=RAW.filter(r=>{
+    for(const c of COLS){
+      const f=F[c];
+      if(!f) continue;
+      const m=META.find(x=>x.name===c);
+      if(f.q){
+        if(!String(r[c]??"").toLowerCase().includes(f.q.toLowerCase())) return false;
+      }
+      if(f.vals && f.vals.length){
+        if(!f.vals.includes(String(r[c]??""))) return false;
+      }
+      if(m && m.type==="number" && (f.min!=null||f.max!=null)){
+        const v=toNum(r[c]);
+        if(isNaN(v)) return false;
+        if(f.min!=null && v<f.min) return false;
+        if(f.max!=null && v>f.max) return false;
+      }
+      if(m && m.type==="date" && (f.from||f.to)){
+        const d=toDate(r[c]);
+        if(!d) return false;
+        if(f.from && d<new Date(f.from)) return false;
+        if(f.to){ const t=new Date(f.to); t.setHours(23,59,59); if(d>t) return false; }
+      }
+    }
+    return true;
+  });
+  if(SORT){
+    const m=META.find(x=>x.name===SORT);
+    VIEW.sort((a,b)=>{
+      let x=a[SORT],y=b[SORT];
+      if(m&&m.type==="number"){x=toNum(x);y=toNum(y);}
+      else if(m&&m.type==="date"){x=toDate(x)?toDate(x).getTime():0;y=toDate(y)?toDate(y).getTime():0;}
+      else {x=String(x??"").toLowerCase();y=String(y??"").toLowerCase();}
+      if(x<y)return -1*SORTDIR; if(x>y)return 1*SORTDIR; return 0;
+    });
+  }
+  renderKPIs(); renderCharts(); renderTable();
+  const nums=META.filter(m=>m.type==="number");
+  document.getElementById("stat").textContent =
+    fmtFull(VIEW.length)+" of "+fmtFull(RAW.length)+" rows · "+COLS.length+" columns · "+
+    nums.length+" numeric, "+META.filter(m=>m.type==="date").length+" date, "+
+    META.filter(m=>m.type==="text").length+" text";
+}
+
+/* ---------- controls ---------- */
+function buildControls(){
+  const box=document.getElementById("controls");
+  box.innerHTML="";
+  const nums=META.filter(m=>m.type==="number");
+  const dates=META.filter(m=>m.type==="date");
+  const cats=META.filter(m=>m.type==="text" && m.distinct>1 && m.distinct<=40);
+
+  // search
+  const s=document.createElement("div"); s.className="fld";
+  s.innerHTML='<label>Search</label><input type="text" id="q" placeholder="any column">';
+  box.appendChild(s);
+  s.querySelector("#q").oninput=e=>{
+    COLS.forEach(c=>{ F[c]=F[c]||{}; F[c].q=e.target.value||null; });
+    apply();
+  };
+
+  cats.slice(0,3).forEach(m=>{
+    const d=document.createElement("div"); d.className="fld";
+    const vals=[...new Set(RAW.map(r=>String(r[m.name]??"")))].filter(v=>v!=="").sort().slice(0,300);
+    d.innerHTML='<label>'+esc(m.name)+'</label><select multiple size="1" data-c="'+esc(m.name)+'" style="height:32px">'
+      +'<option value="">All ('+vals.length+')</option>'
+      +vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join("")+'</select>';
+    box.appendChild(d);
+    d.querySelector("select").onchange=e=>{
+      const sel=[...e.target.selectedOptions].map(o=>o.value).filter(Boolean);
+      F[m.name]=F[m.name]||{}; F[m.name].vals=sel;
+      apply();
+    };
+  });
+
+  nums.slice(0,2).forEach(m=>{
+    const vals=RAW.map(r=>toNum(r[m.name])).filter(v=>!isNaN(v));
+    if(!vals.length) return;
+    const lo=Math.min(...vals), hi=Math.max(...vals);
+    const d=document.createElement("div"); d.className="fld";
+    d.innerHTML='<label>'+esc(m.name)+' ≥ <span class="rv">'+fmt(lo)+'</span></label>'
+      +'<input type="range" min="'+lo+'" max="'+hi+'" step="'+((hi-lo)/100||1)+'" value="'+lo+'" data-c="'+esc(m.name)+'">';
+    box.appendChild(d);
+    d.querySelector("input").oninput=e=>{
+      d.querySelector(".rv").textContent=fmt(+e.target.value);
+      F[m.name]=F[m.name]||{}; F[m.name].min=+e.target.value;
+      apply();
+    };
+  });
+
+  dates.slice(0,1).forEach(m=>{
+    const ds=RAW.map(r=>toDate(r[m.name])).filter(Boolean);
+    if(!ds.length) return;
+    const a=new Date(Math.min(...ds)), b=new Date(Math.max(...ds));
+    const d=document.createElement("div"); d.className="fld";
+    d.innerHTML='<label>'+esc(m.name)+' from</label><input type="text" data-k="from" data-c="'+esc(m.name)+'" value="'+dstr(a)+'" style="width:120px">';
+    const d2=document.createElement("div"); d2.className="fld";
+    d2.innerHTML='<label>to</label><input type="text" data-k="to" data-c="'+esc(m.name)+'" value="'+dstr(b)+'" style="width:120px">';
+    box.appendChild(d); box.appendChild(d2);
+    [d,d2].forEach(box2=>{
+      box2.querySelector("input").onchange=e=>{
+        const k=e.target.dataset.k;
+        F[m.name]=F[m.name]||{}; F[m.name][k]=e.target.value;
+        apply();
+      };
+    });
+  });
+
+  const rst=document.createElement("div"); rst.className="fld";
+  rst.innerHTML='<label>&nbsp;</label><button id="rst">Reset</button>';
+  box.appendChild(rst);
+  document.getElementById("rst").onclick=()=>{
+    COLS.forEach(c=>delete F[c]); buildControls(); apply();
+  };
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const box=document.getElementById("kpis");
+  const nums=META.filter(m=>m.type==="number");
+  const dates=META.filter(m=>m.type==="date");
+  const items=[];
+  items.push({k:"Rows",v:fmtFull(VIEW.length),s:fmtFull(RAW.length)+" total"});
+  nums.slice(0,3).forEach(m=>{
+    const vals=VIEW.map(r=>toNum(r[m.name])).filter(v=>!isNaN(v));
+    if(!vals.length) return;
+    const sum=vals.reduce((a,b)=>a+b,0);
+    items.push({k:m.name+" · sum",v:fmt(sum),s:"avg "+fmt(sum/vals.length)});
+  });
+  if(dates.length){
+    const ds=VIEW.map(r=>toDate(r[dates[0].name])).filter(Boolean);
+    if(ds.length){
+      const a=new Date(Math.min(...ds)),b=new Date(Math.max(...ds));
+      items.push({k:dates[0].name+" · span",v:Math.round((b-a)/864e5)+1+"d",s:dstr(a)+" → "+dstr(b)});
+    }
+  }
+  const cats=META.filter(m=>m.type==="text"&&m.distinct>1&&m.distinct<=60);
+  if(cats.length){
+    const m=cats.sort((a,b)=>b.distinct-a.distinct)[0];
+    items.push({k:m.name+" · unique",v:fmtFull(new Set(VIEW.map(r=>r[m.name])).size),s:"distinct values"});
+  }
+  box.innerHTML = items.slice(0,6).map(i=>
+    '<div class="kpi"><div class="k">'+esc(i.k)+'</div><div class="v">'+esc(i.v)+'</div><div class="s">'+esc(i.s||"")+'</div></div>'
+  ).join("");
+}
+
+/* ---------- charts ---------- */
+function svgEl(w,h){ return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'; }
+function niceMax(v){
+  if(v<=0) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(v)));
+  const n=v/e;
+  return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*e;
+}
+function chartLine(labels,vals,title,sub){
+  const W=560,H=240,L=56,R=16,T=16,B=40;
+  const iw=W-L-R, ih=H-T-B;
+  const max=niceMax(Math.max(...vals,0)), min=Math.min(0,...vals);
+  const X=i=>L+(vals.length<2?iw/2:i*iw/(vals.length-1));
+  const Y=v=>T+ih-((v-min)/(max-min))*ih;
+  const pts=vals.map((v,i)=>X(i)+","+Y(v)).join(" ");
+  let g="";
+  for(let i=0;i<=4;i++){
+    const v=min+(max-min)*i/4, y=Y(v);
+    g+='<line class="gl" x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'"/>'
+      +'<text class="tx" x="'+(L-8)+'" y="'+y+'" text-anchor="end" dominant-baseline="central">'+fmt(v)+'</text>';
+  }
+  const step=Math.max(1,Math.ceil(labels.length/7));
+  let xl="";
+  labels.forEach((l,i)=>{
+    if(i%step===0||i===labels.length-1)
+      xl+='<text class="tx" x="'+X(i)+'" y="'+(H-14)+'" text-anchor="middle">'+esc(l)+'</text>';
+  });
+  return '<div class="chart"><div class="ttl">'+esc(title)+'</div><div class="sub">'+esc(sub)+'</div>'
+    +svgEl(W,H)+g
+    +'<polyline fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" points="'+pts+'"/>'
+    +vals.map((v,i)=>'<circle class="dot" cx="'+X(i)+'" cy="'+Y(v)+'" r="3"><title>'+esc(labels[i])+': '+fmt(v)+'</title></circle>').join("")
+    +'<line class="axis" x1="'+L+'" y1="'+(T+ih)+'" x2="'+(W-R)+'" y2="'+(T+ih)+'"/>'
+    +xl+'</svg></div>';
+}
+function chartBar(labels,vals,title,sub){
+  const W=560,H=240,L=76,R=16,T=16,B=20;
+  const n=vals.length, ih=H-T-B, iw=W-L-R;
+  const max=niceMax(Math.max(...vals,0));
+  const bh=Math.min(30, ih/n*0.8);
+  const gap=(ih/n);
+  let s="";
+  vals.forEach((v,i)=>{
+    const y=T+i*gap+(gap-bh)/2;
+    const w=Math.max(1,(v/max)*iw);
+    s+='<text class="tx" x="'+(L-8)+'" y="'+(y+bh/2)+'" text-anchor="end" dominant-baseline="central">'
+      +esc(String(labels[i]).slice(0,14))+'</text>'
+      +'<rect class="bar" x="'+L+'" y="'+y+'" width="'+w+'" height="'+bh+'" rx="3"><title>'+esc(labels[i])+': '+fmt(v)+'</title></rect>'
+      +'<text class="tx" x="'+(L+w+6)+'" y="'+(y+bh/2)+'" dominant-baseline="central">'+fmt(v)+'</text>';
+  });
+  return '<div class="chart"><div class="ttl">'+esc(title)+'</div><div class="sub">'+esc(sub)+'</div>'
+    +svgEl(W,H)+s+'</svg></div>';
+}
+function chartHist(vals,title,sub){
+  const bins=14, lo=Math.min(...vals), hi=Math.max(...vals);
+  if(hi===lo) return "";
+  const w=(hi-lo)/bins, c=new Array(bins).fill(0);
+  vals.forEach(v=>{ let i=Math.floor((v-lo)/w); if(i>=bins)i=bins-1; if(i<0)i=0; c[i]++; });
+  const labels=c.map((_,i)=>fmt(lo+w*i));
+  return chartBar(labels,c,title,sub+" · "+bins+" bins");
+}
+function chartDonut(labels,vals,title,sub){
+  const W=560,H=240,cx=150,cy=H/2,R=88,r=54;
+  const tot=vals.reduce((a,b)=>a+b,0)||1;
+  const pal=["#378add","#1d9e75","#d85a30","#7f77dd","#ba7517","#d4537e","#5f5e5a","#85b7eb"];
+  let a0=-Math.PI/2, seg="";
+  vals.forEach((v,i)=>{
+    const a1=a0+(v/tot)*Math.PI*2;
+    const x0=cx+R*Math.cos(a0),y0=cy+R*Math.sin(a0);
+    const x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1);
+    const x2=cx+r*Math.cos(a1),y2=cy+r*Math.sin(a1);
+    const x3=cx+r*Math.cos(a0),y3=cy+r*Math.sin(a0);
+    const la=(a1-a0)>Math.PI?1:0;
+    if(v/tot>0.999){
+      seg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+((R+r)/2)+'" fill="none" stroke="'+pal[i%8]+'" stroke-width="'+(R-r)+'"/>';
+    } else {
+      seg+='<path d="M'+x0+' '+y0+' A'+R+' '+R+' 0 '+la+' 1 '+x1+' '+y1
+        +' L'+x2+' '+y2+' A'+r+' '+r+' 0 '+la+' 0 '+x3+' '+y3+' Z" fill="'+pal[i%8]+'">'
+        +'<title>'+esc(labels[i])+': '+fmt(v)+' ('+(v/tot*100).toFixed(1)+'%)</title></path>';
+    }
+    a0=a1;
+  });
+  let leg="";
+  labels.slice(0,8).forEach((l,i)=>{
+    const y=cy-70+i*21;
+    leg+='<rect x="290" y="'+(y-6)+'" width="11" height="11" rx="2" fill="'+pal[i%8]+'"/>'
+      +'<text class="tx" x="308" y="'+y+'" dominant-baseline="central">'+esc(String(l).slice(0,26))+'</text>'
+      +'<text class="tx" x="550" y="'+y+'" text-anchor="end" dominant-baseline="central">'+(vals[i]/tot*100).toFixed(1)+'%</text>';
+  });
+  return '<div class="chart"><div class="ttl">'+esc(title)+'</div><div class="sub">'+esc(sub)+'</div>'
+    +svgEl(W,H)+seg+leg
+    +'<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="20" font-weight="600" fill="var(--ink)">'+fmt(tot)+'</text>'
+    +'<text class="tx" x="'+cx+'" y="'+(cy+16)+'" text-anchor="middle">total</text>'
+    +'</svg></div>';
+}
+function groupSum(rows,key,val){
+  const m=new Map();
+  rows.forEach(r=>{
+    const k=String(r[key]??"(empty)");
+    const v=toNum(r[val]); if(isNaN(v)) return;
+    m.set(k,(m.get(k)||0)+v);
+  });
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+function renderCharts(){
+  const box=document.getElementById("charts");
+  if(!VIEW.length){ box.innerHTML='<div class="chart"><div class="sub">No rows match the current filter.</div></div>'; return; }
+  const nums=META.filter(m=>m.type==="number");
+  const dates=META.filter(m=>m.type==="date");
+  const cats=META.filter(m=>m.type==="text"&&m.distinct>1&&m.distinct<=30)
+                 .sort((a,b)=>a.distinct-b.distinct);
+  let html="";
+
+  // 1. time series
+  if(dates.length&&nums.length){
+    const dk=dates[0].name, vk=nums[0].name;
+    const m=new Map();
+    VIEW.forEach(r=>{
+      const d=toDate(r[dk]); const v=toNum(r[vk]);
+      if(!d||isNaN(v)) return;
+      const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+      m.set(k,(m.get(k)||0)+v);
+    });
+    const ks=[...m.keys()].sort();
+    if(ks.length>=2) html+=chartLine(ks,ks.map(k=>m.get(k)),vk+" over time","by "+dk+" · monthly "+ (isSumLike(vk)?"total":"sum"));
+  }
+  // 2. top categories
+  if(cats.length&&nums.length){
+    const ck=cats[0].name, vk=nums[0].name;
+    const g=groupSum(VIEW,ck,vk).slice(0,10);
+    if(g.length) html+=chartBar(g.map(x=>x[0]),g.map(x=>x[1]),"Top "+ck+" by "+vk,g.length+" of "+new Set(VIEW.map(r=>r[ck])).size+" groups");
+  }
+  // 3. distribution
+  if(nums.length){
+    const vals=VIEW.map(r=>toNum(r[nums[0].name])).filter(v=>!isNaN(v));
+    if(vals.length>3) html+=chartHist(vals,"Distribution of "+nums[0].name,fmtFull(vals.length)+" values");
+  }
+  // 4. composition
+  if(cats.length&&nums.length>1){
+    const ck=cats[0].name, vk=nums[1].name;
+    const g=groupSum(VIEW,ck,vk).slice(0,8);
+    if(g.length>1) html+=chartDonut(g.map(x=>x[0]),g.map(x=>x[1]),vk+" share by "+ck,"top "+g.length);
+  } else if(cats.length){
+    const ck=cats[0].name;
+    const m=new Map();
+    VIEW.forEach(r=>{const k=String(r[ck]??"(empty)");m.set(k,(m.get(k)||0)+1);});
+    const g=[...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if(g.length>1) html+=chartDonut(g.map(x=>x[0]),g.map(x=>x[1]),"Row share by "+ck,"top "+g.length);
+  }
+  box.innerHTML=html||'<div class="chart"><div class="sub">Not enough numeric or categorical data to chart.</div></div>';
+}
+function isSumLike(){ return true; }
+
+/* ---------- table ---------- */
+function renderTable(){
+  const t=document.getElementById("tbl");
+  const rows=VIEW.slice(0,500);
+  let h="<thead><tr>";
+  COLS.forEach(c=>{
+    const m=META.find(x=>x.name===c);
+    h+='<th class="'+(m&&m.type==="number"?"n":"")+'" data-c="'+esc(c)+'">'+esc(c)
+      +(SORT===c?(SORTDIR>0?" ↑":" ↓"):"")+"</th>";
+  });
+  h+="</tr></thead><tbody>";
+  rows.forEach(r=>{
+    h+="<tr>";
+    COLS.forEach(c=>{
+      const m=META.find(x=>x.name===c);
+      let v=r[c]??"";
+      if(m&&m.type==="number"&&!isNaN(toNum(v))) v=fmtFull(toNum(v));
+      h+='<td class="'+(m&&m.type==="number"?"n":"")+'">'+esc(v)+"</td>";
+    });
+    h+="</tr>";
+  });
+  h+="</tbody>";
+  if(VIEW.length>rows.length) h+='<tfoot><tr><td colspan="'+COLS.length+'" style="color:var(--muted)">Showing first '+rows.length+" of "+fmtFull(VIEW.length)+" rows</td></tr></tfoot>";
+  t.innerHTML=h;
+  t.querySelectorAll("th").forEach(th=>{
+    th.onclick=()=>{
+      const c=th.dataset.c;
+      if(SORT===c) SORTDIR*=-1; else {SORT=c;SORTDIR=1;}
+      apply();
+    };
+  });
+}
+
+/* ---------- export ---------- */
+function download(name,blob){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+function exportPNG(){
+  const svgs=[...document.querySelectorAll("#charts svg")];
+  if(!svgs.length) return;
+  const pad=24, W=Math.max(...svgs.map(s=>s.viewBox.baseVal.width))+pad*2;
+  const totalH=svgs.reduce((a,s)=>a+s.viewBox.baseVal.height+pad,0)+pad;
+  const scale=2;
+  const cv=document.createElement("canvas");
+  cv.width=W*scale; cv.height=totalH*scale;
+  const ctx=cv.getContext("2d");
+  const dark=document.documentElement.getAttribute("data-theme")==="dark";
+  ctx.fillStyle=dark?"#14171c":"#f7f8fa";
+  ctx.fillRect(0,0,cv.width,cv.height);
+  let y=pad;
+  const jobs=svgs.map(s=>{
+    const s2=s.cloneNode(true);
+    s2.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    const vb=s.viewBox.baseVal;
+    s2.setAttribute("width",vb.width); s2.setAttribute("height",vb.height);
+    let str=new XMLSerializer().serializeToString(s2);
+    const cs=getComputedStyle(document.documentElement);
+    str=str.replace(/var\(--([a-z0-9-]+)\)/g,(m,n)=>{
+      const v=cs.getPropertyValue("--"+n).trim();
+      return v||m;
+    });
+    const img=new Image();
+    const p=new Promise(res=>{
+      img.onload=()=>res({img,w:vb.width,h:vb.height});
+      img.onerror=()=>res(null);
+    });
+    img.src="data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(str)));
+    return p;
+  });
+  Promise.all(jobs).then(list=>{
+    list.forEach(o=>{
+      if(!o) return;
+      ctx.drawImage(o.img,pad*scale,y*scale,o.w*scale,o.h*scale);
+      y+=o.h+pad;
+    });
+    cv.toBlob(b=>download("dropboard-charts.png",b));
+  });
+}
+function exportHTML(){
+  const data=[COLS.join(",")].concat(RAW.map(r=>COLS.map(c=>{
+    const v=String(r[c]??"");
+    return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v;
+  }).join(","))).join("\n");
+  const src=__ORIG;
+  const marker='<script>\n"use strict";';
+  const inject='<script>window.__DB_DATA__='+JSON.stringify(data).replace(/<\//g,"<\\/")+';<\/script>\n'+marker;
+  const out=src.replace(marker,inject);
+  download("dropboard-standalone.html",new Blob([out],{type:"text/html"}));
+}
+function exportCSV(){
+  const lines=[COLS.join(",")].concat(VIEW.map(r=>COLS.map(c=>{
+    const v=String(r[c]??"");
+    return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v;
+  }).join(",")));
+  download("dropboard-filtered.csv",new Blob(["\uFEFF"+lines.join("\n")],{type:"text/csv"}));
+}
+
+/* ---------- wiring ---------- */
+const drop=document.getElementById("drop");
+const fileEl=document.getElementById("file");
+document.getElementById("pick").onclick=()=>fileEl.click();
+fileEl.onchange=e=>{ const f=e.target.files[0]; if(f) readFile(f); };
+function readFile(f){
+  const rd=new FileReader();
+  rd.onload=()=>load(String(rd.result));
+  rd.onerror=()=>fail("Could not read that file.");
+  rd.readAsText(f,"utf-8");
+}
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>{
+  const f=e.dataTransfer.files[0];
+  if(f) readFile(f);
+  else { const t=e.dataTransfer.getData("text"); if(t) load(t); }
+});
+document.getElementById("pasteBtn").onclick=()=>{
+  const b=document.getElementById("pasteBox");
+  b.style.display=b.style.display==="none"?"":"none";
+  if(b.style.display==="") document.getElementById("paste").focus();
+};
+document.getElementById("loadPaste").onclick=()=>{
+  const t=document.getElementById("paste").value;
+  if(t.trim()) load(t); else fail("Paste something first.");
+};
+document.getElementById("demo").onclick=()=>load(SAMPLE);
+document.getElementById("png").onclick=exportPNG;
+document.getElementById("html").onclick=exportHTML;
+document.getElementById("csv").onclick=exportCSV;
+document.getElementById("theme").onclick=()=>{
+  const d=document.documentElement;
+  const dark=d.getAttribute("data-theme")==="dark";
+  d.setAttribute("data-theme",dark?"":"dark");
+  document.getElementById("theme").textContent=dark?"Dark":"Light";
+  if(RAW.length){ renderCharts(); }
+};
+
+/* ---------- sample ---------- */
+const SAMPLE = (function(){
+  const regions=["North","South","East","West","Central"];
+  const reps=["A. Chen","B. Ortiz","C. Novak","D. Silva","E. Haddad","F. Weber"];
+  const plans=["Starter","Growth","Scale"];
+  let s="deal_id,rep,region,plan,amount,units,close_date\n";
+  let seed=42;
+  const rnd=()=>((seed=seed*1103515245+12345&0x7fffffff)/0x7fffffff);
+  for(let i=1;i<=420;i++){
+    const d=new Date(2026,0,1+Math.floor(rnd()*240));
+    const plan=plans[Math.floor(rnd()*3)];
+    const base=plan==="Starter"?400:plan==="Growth"?1600:5200;
+    const amt=Math.round(base*(0.6+rnd()*0.9)/10)*10;
+    s+="D"+String(i).padStart(4,"0")+","
+      +reps[Math.floor(rnd()*reps.length)]+","
+      +regions[Math.floor(rnd()*regions.length)]+","
+      +plan+","+amt+","+(1+Math.floor(rnd()*24))+","
+      +dstr(d)+"\n";
+  }
+  return s;
+})();
+
+if(window.__DB_DATA__){ load(window.__DB_DATA__); }
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">DropBoard is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$19</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/ezzks" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get DropBoard — $19</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
