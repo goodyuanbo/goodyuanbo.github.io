@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A11yCheck — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of A11yCheck. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/a11ycheck" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get A11yCheck — $17</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>A11yCheck</h1>
+  <span class="tag">WCAG contrast &amp; accessibility checker</span>
+  <span class="tag">100% offline</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="panel">
+  <h3>1 · Pick your two colours</h3>
+  <div class="controls">
+    <div class="fld"><label>Foreground (text)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="color" id="fgPick" value="#1b1f24" style="width:46px;height:34px;padding:2px;cursor:pointer">
+        <input type="text" id="fgHex" value="#1b1f24" class="mono" spellcheck="false">
+      </div></div>
+    <div class="fld"><label>Background</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="color" id="bgPick" value="#ffffff" style="width:46px;height:34px;padding:2px;cursor:pointer">
+        <input type="text" id="bgHex" value="#ffffff" class="mono" spellcheck="false">
+      </div></div>
+    <div><button id="swap">⇅ Swap</button></div>
+  </div>
+  <div class="bar">
+    <span class="stat">Quick pairs:</span>
+    <button class="mini" data-p="#1b1f24,#ffffff">Black on white</button>
+    <button class="mini" data-p="#767676,#ffffff">Grey on white</button>
+    <button class="mini" data-p="#d85a30,#ffffff">Coral on white</button>
+    <button class="mini" data-p="#ffffff,#d85a30">White on coral</button>
+    <button class="mini" data-p="#f0997b,#14171c">Sand on near-black</button>
+    <button class="mini" data-p="#378add,#ffffff">Blue on white</button>
+    <button class="mini" data-p="#8b8b8b,#f5f5f5">Failing example</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>2 · Live preview</h3>
+  <div class="bar" style="margin-top:0">
+    <span class="stat">Colour-vision simulation:</span>
+    <button class="mini" data-cb="none">Normal</button>
+    <button class="mini" data-cb="protan">Protanopia</button>
+    <button class="mini" data-cb="deutan">Deuteranopia</button>
+    <button class="mini" data-cb="tritan">Tritanopia</button>
+    <button class="mini" data-cb="achroma">Achromatopsia</button>
+    <span class="spacer"></span>
+    <span class="stat" id="cbHint"></span>
+  </div>
+  <div id="preview" style="border-radius:12px;padding:22px;margin-top:12px;border:1px solid var(--line)">
+    <div style="font-size:38px;font-weight:700;letter-spacing:-.8px;line-height:1.15">Designing for everyone</div>
+    <div style="margin-top:14px;font-size:16px;line-height:1.65;max-width:62ch">
+      Body copy is where contrast failures actually hurt. This paragraph is set at 16&nbsp;px, which counts as
+      normal text under WCAG&nbsp;2.2 — it needs a contrast ratio of at least <b>4.5:1</b> to pass Level&nbsp;AA,
+      and 7:1 for AAA.
+    </div>
+    <div style="margin-top:14px;font-size:13px;line-height:1.6;max-width:62ch;opacity:.9">
+      Small print, captions and placeholder text still need the same 4.5:1 — there is no exemption for
+      de-emphasised text, only for text that is genuinely disabled.
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button style="font:inherit;font-size:14px;padding:9px 18px;border-radius:8px;cursor:pointer">Primary action</button>
+      <button style="font:inherit;font-size:14px;padding:9px 18px;border-radius:8px;cursor:pointer;background:transparent">Secondary</button>
+      <a href="#" onclick="return false;" style="font-size:15px">Read the documentation →</a>
+    </div>
+  </div>
+  <div class="hint" style="margin-top:10px">
+    Buttons and links in the preview inherit your two colours so you can see the real thing, not just a number.
+    Under WCAG&nbsp;2.2, text at 18.66&nbsp;px bold or 24&nbsp;px regular counts as <b>large text</b> (3:1 for AA).
+  </div>
+</div>
+
+<div class="panel">
+  <h3>3 · Fix suggestions</h3>
+  <div id="fix"></div>
+  <div class="hint" id="fixHint" style="margin-top:10px"></div>
+</div>
+
+<div class="panel">
+  <h3>4 · Check a whole palette</h3>
+  <div class="fld"><label>Paste hex values (comma, space or one per line)</label>
+    <textarea id="palette" rows="4" spellcheck="false">#14171c
+#d85a30
+#f0997b
+#f7f8fa
+#378add
+#1d9e75
+#6b7280</textarea></div>
+  <div class="bar">
+    <button id="buildMatrix" class="primary">Build contrast matrix</button>
+    <button class="mini" id="copyMatrix">Copy matrix (TSV)</button>
+    <span class="stat" id="palStat"></span>
+  </div>
+  <div id="matrix" style="overflow:auto"></div>
+  <div class="hint" style="margin-top:8px">
+    Every cell is the contrast ratio between that row and column as foreground-on-background.
+    Green ≥ 4.5:1 (AA normal text), amber ≥ 3:1 (AA large text / non-text UI), red below both.
+  </div>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="cb-protan" color-interpolation-filters="linearRGB">
+      <feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cb-deutan" color-interpolation-filters="linearRGB">
+      <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.700 0.300 0 0 0  0 0.300 0.700 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cb-tritan" color-interpolation-filters="linearRGB">
+      <feColorMatrix type="matrix" values="0.950 0.050 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/>
+    </filter>
+    <filter id="cb-achroma" color-interpolation-filters="linearRGB">
+      <feColorMatrix type="matrix" values="0.299 0.587 0.114 0 0  0.299 0.587 0.114 0 0  0.299 0.587 0.114 0 0  0 0 0 1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* MAIN LOGIC HERE */
+(function(){
+"use strict";
+
+var CB="none";
+
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function normHex(s){
+  s=String(s||"").trim().replace(/^#/,"");
+  if(s.length===3) s=s.charAt(0)+s.charAt(0)+s.charAt(1)+s.charAt(1)+s.charAt(2)+s.charAt(2);
+  if(!/^[0-9a-fA-F]{6}$/.test(s)) return null;
+  return "#"+s.toUpperCase();
+}
+function rgb(hex){
+  var s=hex.replace("#","");
+  return [parseInt(s.substr(0,2),16),parseInt(s.substr(2,2),16),parseInt(s.substr(4,2),16)];
+}
+function toHex(c){
+  function h(n){var x=clamp(Math.round(n),0,255).toString(16);return x.length<2?"0"+x:x;}
+  return ("#"+h(c[0])+h(c[1])+h(c[2])).toUpperCase();
+}
+function lum(hex){
+  var c=rgb(hex),o=[];
+  for(var i=0;i<3;i++){
+    var v=c[i]/255;
+    o.push(v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+  }
+  return 0.2126*o[0]+0.7152*o[1]+0.0722*o[2];
+}
+function ratio(a,b){
+  var l1=lum(a),l2=lum(b);
+  var hi=Math.max(l1,l2),lo=Math.min(l1,l2);
+  return (hi+0.05)/(lo+0.05);
+}
+function fmt(r){return (Math.floor(r*100)/100).toFixed(2)+":1";}
+function mix(c1,c2,t){
+  return [c1[0]+(c2[0]-c1[0])*t, c1[1]+(c2[1]-c1[1])*t, c1[2]+(c2[2]-c1[2])*t];
+}
+function searchFix(fg,bg,target,dir){
+  var base=rgb(fg),tgt=dir>0?[255,255,255]:[0,0,0];
+  for(var i=1;i<=200;i++){
+    var c=mix(base,tgt,i/200);
+    var hx=toHex(c);
+    if(ratio(hx,bg)>=target) return {hex:hx,steps:i/2};
+  }
+  return null;
+}
+function bestFix(fg,bg,target){
+  var up=searchFix(fg,bg,target,1);
+  var dn=searchFix(fg,bg,target,-1);
+  if(up&&dn) return dn.steps<=up.steps?{r:dn,dir:-1}:{r:up,dir:1};
+  if(dn) return {r:dn,dir:-1};
+  if(up) return {r:up,dir:1};
+  return null;
+}
+function relL(hex){return Math.round(lum(hex)*1000)/10;}
+
+function readColors(){
+  var f=normHex($("fgHex").value)||"#000000";
+  var b=normHex($("bgHex").value)||"#FFFFFF";
+  return {fg:f,bg:b};
+}
+function setColors(fg,bg,noSync){
+  $("fgHex").value=fg;$("bgHex").value=bg;
+  $("fgPick").value=fg;$("bgPick").value=bg;
+  if(!noSync) render();
+}
+
+function pillFor(r,level){
+  if(level==="aaa") return r>=7?'<span class="pill ok">AAA</span>':(r>=4.5?'<span class="pill mid">AA only</span>':'<span class="pill no">Fail</span>');
+  if(level==="aa") return r>=4.5?'<span class="pill ok">AA</span>':(r>=3?'<span class="pill mid">Large only</span>':'<span class="pill no">Fail</span>');
+  return r>=3?'<span class="pill ok">AA</span>':'<span class="pill no">Fail</span>';
+}
+
+function render(){
+  var c=readColors();
+  var r=ratio(c.fg,c.bg);
+
+  var pv=$("preview");
+  pv.style.background=c.bg;
+  pv.style.color=c.fg;
+  var kids=pv.getElementsByTagName("*");
+  for(var i=0;i<kids.length;i++){
+    var tag=kids[i].tagName;
+    kids[i].style.color=c.fg;
+    if(tag==="A"){
+      kids[i].style.textDecoration="underline";
+      kids[i].style.textUnderlineOffset="2px";
+    }
+    if(tag==="BUTTON"){
+      kids[i].style.background="transparent";
+      kids[i].style.border="1.5px solid "+c.fg;
+      kids[i].style.borderRadius="8px";
+    }
+  }
+  pv.style.filter=CB==="none"?"none":"url(#cb-"+CB+")";
+
+  var cbn={none:"Normal colour vision — no simulation applied.",
+    protan:"Protanopia — reduced sensitivity to red. Reds look darker and can collapse into the background.",
+    deutan:"Deuteranopia — reduced sensitivity to green. The most common form; red/green pairs are the risky ones.",
+    tritan:"Tritanopia — reduced sensitivity to blue. Blue/yellow pairs lose separation.",
+    achroma:"Achromatopsia — no colour at all. Anything that relies on hue alone is invisible here."};
+  $("cbHint").textContent=cbn[CB]||"";
+
+  var passAA=r>=4.5, passAALarge=r>=3, passAAA=r>=7, passAAALarge=r>=4.5;
+  var overall=passAAA?"AAA":(passAA?"AA":(passAALarge?"AA large":"Fail"));
+  var overallCls=passAAA?"good":(passAA?"good":(passAALarge?"warn":"bad"));
+  var h="";
+  h+='<div class="kpi"><div class="k">Contrast ratio</div><div class="v '+overallCls+'">'+fmt(r)+'</div><div class="s">'+c.fg+' on '+c.bg+'</div></div>';
+  h+='<div class="kpi"><div class="k">Normal text AA</div><div class="v '+(passAA?"good":"bad")+'">'+(passAA?"Pass":"Fail")+'</div><div class="s">needs 4.5:1</div></div>';
+  h+='<div class="kpi"><div class="k">Large text AA</div><div class="v '+(passAALarge?"good":"bad")+'">'+(passAALarge?"Pass":"Fail")+'</div><div class="s">needs 3:1 · 24px or 18.7px bold</div></div>';
+  h+='<div class="kpi"><div class="k">AAA</div><div class="v '+(passAAA?"good":(passAAALarge?"warn":"bad"))+'">'+(passAAA?"Pass":(passAAALarge?"Large only":"Fail"))+'</div><div class="s">needs 7:1 · 4.5:1 large</div></div>';
+  h+='<div class="kpi"><div class="k">Overall</div><div class="v '+overallCls+'">'+overall+'</div><div class="s">WCAG 2.2 SC 1.4.3 / 1.4.6</div></div>';
+  $("kpis").innerHTML=h;
+
+  var fh="";
+  if(r>=7){
+    fh='<div class="hint">This pair already clears <b>AAA</b> (7:1) for normal text — no fix needed. '+
+       'Relative luminance: fg '+relL(c.fg)+'%, bg '+relL(c.bg)+'%.</div>';
+  } else {
+    var rows=[];
+    var t1=bestFix(c.fg,c.bg,4.5);
+    if(t1&&r<4.5) rows.push(["Reach AA — normal text (4.5:1)",t1]);
+    var t2=bestFix(c.fg,c.bg,7);
+    if(t2&&r<7) rows.push(["Reach AAA — normal text (7:1)",t2]);
+    var t3=bestFix(c.fg,c.bg,3);
+    if(t3&&r<3) rows.push(["Reach AA — large text (3:1)",t3]);
+    fh='<table><tr><th>Goal</th><th>Change</th><th>New foreground</th><th style="width:90px">New ratio</th><th style="width:150px">Preview</th><th></th></tr>';
+    for(var k=0;k<rows.length;k++){
+      var fx=rows[k][1],d=fx.dir,nr=ratio(fx.r.hex,c.bg);
+      fh+='<tr><td>'+rows[k][0]+'</td>'+
+        '<td>'+(d>0?"Lighten":"Darken")+' by '+Math.round(fx.r.steps)+'%</td>'+
+        '<td class="mono">'+fx.r.hex+'</td>'+
+        '<td class="mono '+("good")+'">'+fmt(nr)+'</td>'+
+        '<td><span style="display:inline-block;background:'+c.bg+';color:'+fx.r.hex+';padding:3px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px">Sample text</span></td>'+
+        '<td><button class="mini" data-apply="'+fx.r.hex+'">Apply</button></td></tr>';
+    }
+    fh+="</table>";
+    if(!rows.length){
+      fh='<div class="hint">No change needed for the thresholds shown above.</div>';
+    }
+  }
+  fh+='<div class="hint" style="margin-top:10px">Relative luminance — foreground <b>'+relL(c.fg)+
+    '%</b>, background <b>'+relL(c.bg)+'%</b>. Suggestions move the foreground toward pure white or pure black by the '+
+    '<i>smallest</i> amount that clears the threshold, so your hue survives as much as possible.</div>';
+  $("fix").innerHTML=fh;
+  var ab=$("fix").querySelectorAll("button[data-apply]");
+  for(var q=0;q<ab.length;q++){
+    ab[q].onclick=function(){
+      setColors(this.getAttribute("data-apply"),readColors().bg);
+      toast("Applied "+this.getAttribute("data-apply"));
+    };
+  }
+  $("fixHint").textContent="";
+
+  var cbBtns=document.querySelectorAll("button[data-cb]");
+  for(var z=0;z<cbBtns.length;z++){
+    cbBtns[z].className=cbBtns[z].getAttribute("data-cb")===CB?"mini primary":"mini";
+  }
+}
+
+function buildMatrix(){
+  var raw=$("palette").value;
+  var parts=raw.split(/[\s,;]+/),cols=[];
+  for(var i=0;i<parts.length;i++){
+    var hx=normHex(parts[i]);
+    if(hx&&cols.indexOf(hx)<0) cols.push(hx);
+  }
+  if(cols.length<2){
+    $("matrix").innerHTML='<div class="hint" style="padding:10px 0">Enter at least two valid hex values.</div>';
+    $("palStat").textContent="";
+    return;
+  }
+  var h='<table><tr><th>FG ↓ / BG →</th>';
+  for(var a=0;a<cols.length;a++){
+    h+='<th style="text-align:center"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:'+cols[a]+';border:1px solid var(--line);vertical-align:middle;margin-right:5px"></span>'+cols[a]+'</th>';
+  }
+  h+='<th style="text-align:center">Best text</th></tr>';
+  for(var x=0;x<cols.length;x++){
+    h+='<tr><td class="mono"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:'+cols[x]+';border:1px solid var(--line);vertical-align:middle;margin-right:5px"></span>'+cols[x]+'</td>';
+    for(var y=0;y<cols.length;y++){
+      if(x===y){h+='<td class="num mono" style="color:var(--muted)">—</td>';continue;}
+      var rr=ratio(cols[x],cols[y]);
+      var cls=rr>=4.5?"good":(rr>=3?"warn":"bad");
+      h+='<td class="num mono '+cls+'" title="'+cols[x]+' on '+cols[y]+'">'+fmt(rr)+'</td>';
+    }
+    var onWhite=ratio(cols[x],"#FFFFFF"),onBlack=ratio(cols[x],"#000000");
+    var best=onWhite>=onBlack?"#FFFFFF":"#000000";
+    var br=Math.max(onWhite,onBlack);
+    h+='<td class="num mono" style="white-space:nowrap">'+best+' <span class="'+(br>=4.5?"good":(br>=3?"warn":"bad"))+'">'+fmt(br)+'</span></td>';
+    h+="</tr>";
+  }
+  h+="</table>";
+  var fails=0,pairs=0;
+  for(var m=0;m<cols.length;m++){
+    for(var n=0;n<cols.length;n++){
+      if(m===n) continue;
+      pairs++;
+      if(ratio(cols[m],cols[n])<4.5) fails++;
+    }
+  }
+  h+='<div class="hint" style="margin-top:10px">'+cols.length+' colours · '+pairs+' ordered pairs · '+
+     '<b class="'+(fails?"bad":"good")+'">'+fails+'</b> pair'+(fails===1?"":"s")+' below 4.5:1 (AA normal text)'+
+     (fails?" — those combinations must not be used for body copy.":" — every pair is safe for body copy.")+'</div>';
+  $("matrix").innerHTML=h;
+  $("palStat").textContent=cols.length+" colours · "+fails+" failing pairs";
+}
+
+function copyMatrix(){
+  var raw=$("palette").value;
+  var parts=raw.split(/[\s,;]+/),cols=[];
+  for(var i=0;i<parts.length;i++){
+    var hx=normHex(parts[i]);
+    if(hx&&cols.indexOf(hx)<0) cols.push(hx);
+  }
+  if(cols.length<2){toast("Need 2+ colours");return;}
+  var lines=["\t"+cols.join("\t")];
+  for(var x=0;x<cols.length;x++){
+    var row=[cols[x]];
+    for(var y=0;y<cols.length;y++){
+      row.push(x===y?"-":(Math.floor(ratio(cols[x],cols[y])*100)/100).toFixed(2));
+    }
+    lines.push(row.join("\t"));
+  }
+  copy(lines.join("\n"),"Matrix");
+}
+
+$("fgPick").oninput=function(){$("fgHex").value=this.value.toUpperCase();render();};
+$("bgPick").oninput=function(){$("bgHex").value=this.value.toUpperCase();render();};
+$("fgHex").oninput=function(){var h=normHex(this.value);if(h){$("fgPick").value=h;render();}};
+$("bgHex").oninput=function(){var h=normHex(this.value);if(h){$("bgPick").value=h;render();}};
+$("fgHex").onblur=function(){var h=normHex(this.value);if(h){this.value=h;$("fgPick").value=h;render();}else{toast("Invalid hex");}};
+$("bgHex").onblur=function(){var h=normHex(this.value);if(h){this.value=h;$("bgPick").value=h;render();}else{toast("Invalid hex");}};
+$("swap").onclick=function(){
+  var c=readColors();setColors(c.bg,c.fg);toast("Swapped");
+};
+var pb=document.querySelectorAll("button[data-p]");
+for(var i2=0;i2<pb.length;i2++){
+  pb[i2].onclick=function(){
+    var v=this.getAttribute("data-p").split(",");
+    setColors(v[0],v[1]);
+  };
+}
+var cbb=document.querySelectorAll("button[data-cb]");
+for(var i3=0;i3<cbb.length;i3++){
+  cbb[i3].onclick=function(){CB=this.getAttribute("data-cb");render();};
+}
+$("buildMatrix").onclick=buildMatrix;
+$("copyMatrix").onclick=copyMatrix;
+
+setColors("#1B1F24","#FFFFFF",true);
+render();
+buildMatrix();
+})();
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">A11yCheck is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$17</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/a11ycheck" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get A11yCheck — $17</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
