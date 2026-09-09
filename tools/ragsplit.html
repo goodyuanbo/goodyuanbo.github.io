@@ -568,7 +568,48 @@ window.addEventListener("DOMContentLoaded",function(){
   run();
 });
 </script>
-
+<script id="yb-i18n" data-note="i18n by Yuanbo">
+(function(){
+if(window.__ybI18N)return;window.__ybI18N=1;
+var D={"zh":{"See your chunks before you ship them":"上线前看清你的分块","no upload":"不上传","Dark":"深色","Document":"文档","Load sample doc":"加载示例文档","Clear":"清空","Open .txt / .md":"打开 .txt / .md","Chunking parameters":"分块参数","Strategy":"策略","Fixed character window":"固定字符窗口","By paragraph":"按段落","By sentence":"按句子","By Markdown heading":"按 Markdown 标题","Chunk unit":"分块单位","characters":"字符","tokens (est.)":"token（估算）","Chunk size":"块大小","Overlap":"重叠","Split":"开始分块","Overview":"概览","Length distribution":"长度分布","Embedding cost estimate":"Embedding 成本估算","Chunks":"分块列表","Overlap is highlighted":"重叠部分已高亮","Export JSON":"导出 JSON","Everything runs in your browser. Nothing is uploaded.":"一切都在你的浏览器中运行，任何数据都不会上传。","Local-first · one-time purchase · no account":"本地优先 · 一次买断 · 无需账号"},"ja":{"See your chunks before you ship them":"出荷前にチャンクを確認","no upload":"アップロードなし","Dark":"ダーク","Document":"ドキュメント","Load sample doc":"サンプル文書を読み込む","Clear":"クリア","Open .txt / .md":".txt / .md を開く","Chunking parameters":"チャンク分割パラメータ","Strategy":"戦略","Fixed character window":"固定文字数ウィンドウ","By paragraph":"段落ごと","By sentence":"文ごと","By Markdown heading":"Markdown 見出しごと","Chunk unit":"チャンク単位","characters":"文字","tokens (est.)":"トークン（推定）","Chunk size":"チャンクサイズ","Overlap":"オーバーラップ","Split":"分割","Overview":"概要","Length distribution":"長さの分布","Embedding cost estimate":"埋め込みコスト概算","Chunks":"チャンク","Overlap is highlighted":"オーバーラップ部分はハイライト","Export JSON":"JSON をエクスポート","Everything runs in your browser. Nothing is uploaded.":"すべてブラウザ内で動作します。データは一切アップロードされません。","Local-first · one-time purchase · no account":"ローカル優先 · 一括購入 · アカウント不要"},"ko":{"See your chunks before you ship them":"배포 전에 청크 미리보기","no upload":"업로드 없음","Dark":"다크","Document":"문서","Load sample doc":"샘플 문서 불러오기","Clear":"지우기","Open .txt / .md":".txt / .md 열기","Chunking parameters":"청킹 매개변수","Strategy":"전략","Fixed character window":"고정 문자 창","By paragraph":"단락별","By sentence":"문장별","By Markdown heading":"Markdown 제목별","Chunk unit":"청크 단위","characters":"문자","tokens (est.)":"토큰(추정)","Chunk size":"청크 크기","Overlap":"겹침","Split":"분할","Overview":"개요","Length distribution":"길이 분포","Embedding cost estimate":"임베딩 비용 추정","Chunks":"청크","Overlap is highlighted":"겹침 부분이 강조됩니다","Export JSON":"JSON 내보내기","Everything runs in your browser. Nothing is uploaded.":"모든 작업은 브라우저에서 실행되며, 어떤 데이터도 업로드되지 않습니다.","Local-first · one-time purchase · no account":"로컬 우선 · 일회성 구매 · 계정 불필요"},"es":{"See your chunks before you ship them":"Ve tus fragmentos antes de enviarlos","no upload":"sin subidas","Dark":"Oscuro","Document":"Documento","Load sample doc":"Cargar doc de muestra","Clear":"Limpiar","Open .txt / .md":"Abrir .txt / .md","Chunking parameters":"Parámetros de fragmentación","Strategy":"Estrategia","Fixed character window":"Ventana fija de caracteres","By paragraph":"Por párrafo","By sentence":"Por oración","By Markdown heading":"Por encabezado Markdown","Chunk unit":"Unidad de fragmento","characters":"caracteres","tokens (est.)":"tokens (est.)","Chunk size":"Tamaño de fragmento","Overlap":"Solapamiento","Split":"Dividir","Overview":"Resumen","Length distribution":"Distribución de longitudes","Embedding cost estimate":"Estimación de coste de embeddings","Chunks":"Fragmentos","Overlap is highlighted":"El solapamiento está resaltado","Export JSON":"Exportar JSON","Everything runs in your browser. Nothing is uploaded.":"Todo se ejecuta en tu navegador. Nada se sube a ningún servidor.","Local-first · one-time purchase · no account":"Local primero · pago único · sin cuenta"}};
+var LANGS=[["en","EN"],["zh","中文"],["ja","日本語"],["ko","한국어"],["es","Español"]];
+function cur(){try{return localStorage.getItem("yb_i18n_lang")||"en"}catch(e){return "en"}}
+function norm(s){return s.replace(/\s+/g," ").trim().replace(/\u00a0/g," ")}
+function find(m,k){if(!k)return null;if(m[k])return m[k];if(k.slice(-1)===":"&&m[k.slice(0,-1)])return m[k.slice(0,-1)]+":";return null}
+function apply(){
+var lang=cur();var m=D[lang];if(!m)return;
+try{document.documentElement.lang=lang==="zh"?"zh-CN":(lang==="en"?"en":lang)}catch(e){}
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
+while(n=w.nextNode()){
+var raw=n.nodeValue;if(!raw)continue;var k=norm(raw);if(k.length<2)continue;
+var t=find(m,k);if(!t)continue;
+n.nodeValue=(raw.match(/^\s*/)||[""])[0]+t+(raw.match(/\s*$/)||[""])[0];
+}
+var els=document.querySelectorAll("[placeholder],[title],[aria-label]");
+for(var i=0;i<els.length;i++){var el=els[i];
+["placeholder","title","aria-label"].forEach(function(a){
+var v=el.getAttribute&&el.getAttribute(a);if(!v)return;var t=find(m,norm(v));if(t)el.setAttribute(a,t);
+});
+}
+try{var t2=find(m,norm(document.title||""));if(t2)document.title=t2}catch(e){}
+}
+function mkUI(){
+if(document.getElementById("yb-i18n-box"))return;
+var box=document.createElement("div");box.id="yb-i18n-box";
+var sel=document.createElement("select");sel.id="yb-i18n-sel";sel.setAttribute("aria-label","Language");
+LANGS.forEach(function(l){var o=document.createElement("option");o.value=l[0];o.textContent=l[1];sel.appendChild(o);});
+sel.value=cur();
+sel.addEventListener("change",function(){try{localStorage.setItem("yb_i18n_lang",sel.value)}catch(e){}apply();});
+box.appendChild(sel);document.body.appendChild(box);
+var st=document.createElement("style");st.textContent="#yb-i18n-box{position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,28,51,.92);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:2px 4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}#yb-i18n-box select{background:transparent;color:#eaf1fb;border:0;outline:0;font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;padding:4px 8px;cursor:pointer;appearance:auto}#yb-i18n-box select option{color:#111;background:#fff}";
+document.head.appendChild(st);
+}
+function boot(){mkUI();apply();
+var tm;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(apply,120);}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+})();
+</script>
 <div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
   <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">RAGSplit is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$19</b> — or grab all our tools in one bundle.</div>
