@@ -322,7 +322,48 @@ $("theme").onclick=function(){
 stats();
 })();
 </script>
-
+<script id="yb-i18n" data-note="i18n by Yuanbo">
+(function(){
+if(window.__ybI18N)return;window.__ybI18N=1;
+var D={"zh":{"text cleanup":"文本清洗","offline":"离线","Dark":"深色","Clean":"清洗","Find & replace":"查找与替换","Diff":"对比","Operations (applied to the text below)":"操作（应用到下方文本）","Trim each line":"去除每行首尾空白","Remove empty lines":"删除空行","Collapse spaces":"合并多余空格","De-duplicate lines":"去除重复行","Sort A→Z":"A→Z 排序","Sort Z→A":"Z→A 排序","Sort by length":"按长度排序","Shuffle":"随机打乱","Reverse lines":"反转行序","UPPERCASE":"全部大写","lowercase":"全部小写","Title Case":"标题大小写","Tabs → spaces":"制表符 → 空格","Strip non-ASCII":"去除非 ASCII 字符","Add line numbers":"添加行号","Strip line numbers":"去除行号","Extract emails":"提取邮箱","Extract URLs":"提取网址","Extract numbers":"提取数字","Pretty-print JSON":"格式化 JSON","Minify JSON":"压缩 JSON","CSV → list":"CSV → 列表","Base64 encode":"Base64 编码","Base64 decode":"Base64 解码","URL encode":"URL 编码","URL decode":"URL 解码","Add prefix":"添加前缀","Add suffix":"添加后缀","Wrap lines":"自动换行","Undo":"撤销","Text":"文本","Copy":"复制","Download .txt":"下载 .txt","Paste from clipboard":"从剪贴板粘贴","Load sample":"加载示例","Clear":"清空","Find & replace (supports regex)":"查找与替换（支持正则）","Replace all":"全部替换","Replace first":"替换首个","Keep only matches":"仅保留匹配行","Delete matches":"删除匹配行","Count matches":"统计匹配数","Examples: · · · flags":"示例：· · · 标志位","Line diff":"行级对比","Compare":"比较","Swap":"交换","prefix":"前缀","suffix":"后缀","quote char":"引号字符","Paste anything here…":"在这里粘贴任意文本…","find":"查找","replace with":"替换为","flags":"标志位","original text…":"原始文本…","changed text…":"修改后文本…"},"ja":{"text cleanup":"テキスト整形","offline":"オフライン","Dark":"ダーク","Clean":"クリーンアップ","Find & replace":"検索と置換","Diff":"差分","Operations (applied to the text below)":"操作（下のテキストに適用）","Trim each line":"各行の前後の空白を除去","Remove empty lines":"空行を削除","Collapse spaces":"連続スペースを圧縮","De-duplicate lines":"重複行を削除","Sort A→Z":"A→Z で並べ替え","Sort Z→A":"Z→A で並べ替え","Sort by length":"長さ順に並べ替え","Shuffle":"シャッフル","Reverse lines":"行を逆順","UPPERCASE":"大文字","lowercase":"小文字","Title Case":"タイトルケース","Tabs → spaces":"タブ → スペース","Strip non-ASCII":"非 ASCII を除去","Add line numbers":"行番号を追加","Strip line numbers":"行番号を除去","Extract emails":"メールアドレスを抽出","Extract URLs":"URL を抽出","Extract numbers":"数値を抽出","Pretty-print JSON":"JSON を整形","Minify JSON":"JSON を最小化","CSV → list":"CSV → リスト","Base64 encode":"Base64 エンコード","Base64 decode":"Base64 デコード","URL encode":"URL エンコード","URL decode":"URL デコード","Add prefix":"接頭辞を追加","Add suffix":"接尾辞を追加","Wrap lines":"行を折り返し","Undo":"元に戻す","Text":"テキスト","Copy":"コピー","Download .txt":".txt をダウンロード","Paste from clipboard":"クリップボードから貼り付け","Load sample":"サンプルを読み込む","Clear":"クリア","Find & replace (supports regex)":"検索と置換（正規表現対応）","Replace all":"すべて置換","Replace first":"最初のみ置換","Keep only matches":"一致行のみ残す","Delete matches":"一致行を削除","Count matches":"一致数をカウント","Examples: · · · flags":"例：· · · フラグ","Line diff":"行差分","Compare":"比較","Swap":"入れ替え","prefix":"接頭辞","suffix":"接尾辞","quote char":"引用符","Paste anything here…":"ここに何でも貼り付け…","find":"検索","replace with":"置換後","flags":"フラグ","original text…":"元のテキスト…","changed text…":"変更後のテキスト…"},"ko":{"text cleanup":"텍스트 정리","offline":"오프라인","Dark":"다크","Clean":"정리","Find & replace":"찾기 및 바꾸기","Diff":"차이 비교","Operations (applied to the text below)":"연산(아래 텍스트에 적용)","Trim each line":"각 줄 공백 제거","Remove empty lines":"빈 줄 삭제","Collapse spaces":"공백 압축","De-duplicate lines":"중복 줄 제거","Sort A→Z":"A→Z 정렬","Sort Z→A":"Z→A 정렬","Sort by length":"길이순 정렬","Shuffle":"섞기","Reverse lines":"줄 순서 뒤집기","UPPERCASE":"대문자","lowercase":"소문자","Title Case":"제목식 대소문자","Tabs → spaces":"탭 → 공백","Strip non-ASCII":"비 ASCII 제거","Add line numbers":"줄 번호 추가","Strip line numbers":"줄 번호 제거","Extract emails":"이메일 추출","Extract URLs":"URL 추출","Extract numbers":"숫자 추출","Pretty-print JSON":"JSON 정렬 출력","Minify JSON":"JSON 압축","CSV → list":"CSV → 목록","Base64 encode":"Base64 인코딩","Base64 decode":"Base64 디코딩","URL encode":"URL 인코딩","URL decode":"URL 디코딩","Add prefix":"접두사 추가","Add suffix":"접미사 추가","Wrap lines":"줄 바꿈","Undo":"실행 취소","Text":"텍스트","Copy":"복사","Download .txt":".txt 다운로드","Paste from clipboard":"클립보드에서 붙여넣기","Load sample":"샘플 불러오기","Clear":"지우기","Find & replace (supports regex)":"찾기 및 바꾸기(정규식 지원)","Replace all":"모두 바꾸기","Replace first":"첫 항목만 바꾸기","Keep only matches":"일치 항목만 유지","Delete matches":"일치 항목 삭제","Count matches":"일치 개수 세기","Examples: · · · flags":"예: · · · 플래그","Line diff":"줄 단위 비교","Compare":"비교","Swap":"바꾸기","prefix":"접두사","suffix":"접미사","quote char":"따옴표 문자","Paste anything here…":"여기에 아무 텍스트나 붙여넣기…","find":"찾기","replace with":"바꿀 내용","flags":"플래그","original text…":"원본 텍스트…","changed text…":"변경된 텍스트…"},"es":{"text cleanup":"limpieza de texto","offline":"sin conexión","Dark":"Oscuro","Clean":"Limpiar","Find & replace":"Buscar y reemplazar","Diff":"Diferencias","Operations (applied to the text below)":"Operaciones (se aplican al texto inferior)","Trim each line":"Recortar cada línea","Remove empty lines":"Quitar líneas vacías","Collapse spaces":"Compactar espacios","De-duplicate lines":"Quitar duplicados","Sort A→Z":"Ordenar A→Z","Sort Z→A":"Ordenar Z→A","Sort by length":"Ordenar por longitud","Shuffle":"Mezclar","Reverse lines":"Invertir líneas","UPPERCASE":"MAYÚSCULAS","lowercase":"minúsculas","Title Case":"Tipo Título","Tabs → spaces":"Tabulaciones → espacios","Strip non-ASCII":"Quitar no ASCII","Add line numbers":"Numerar líneas","Strip line numbers":"Quitar numeración","Extract emails":"Extraer correos","Extract URLs":"Extraer URLs","Extract numbers":"Extraer números","Pretty-print JSON":"Embellecer JSON","Minify JSON":"Minificar JSON","CSV → list":"CSV → lista","Base64 encode":"Codificar Base64","Base64 decode":"Decodificar Base64","URL encode":"Codificar URL","URL decode":"Decodificar URL","Add prefix":"Añadir prefijo","Add suffix":"Añadir sufijo","Wrap lines":"Ajustar líneas","Undo":"Deshacer","Text":"Texto","Copy":"Copiar","Download .txt":"Descargar .txt","Paste from clipboard":"Pegar del portapapeles","Load sample":"Cargar muestra","Clear":"Limpiar","Find & replace (supports regex)":"Buscar y reemplazar (admite regex)","Replace all":"Reemplazar todo","Replace first":"Reemplazar primero","Keep only matches":"Conservar solo coincidencias","Delete matches":"Eliminar coincidencias","Count matches":"Contar coincidencias","Examples: · · · flags":"Ejemplos: · · · flags","Line diff":"Diff de líneas","Compare":"Comparar","Swap":"Intercambiar","prefix":"prefijo","suffix":"sufijo","quote char":"carácter de comillas","Paste anything here…":"Pega aquí cualquier texto…","find":"buscar","replace with":"reemplazar con","flags":"flags","original text…":"texto original…","changed text…":"texto modificado…"}};
+var LANGS=[["en","EN"],["zh","中文"],["ja","日本語"],["ko","한국어"],["es","Español"]];
+function cur(){try{return localStorage.getItem("yb_i18n_lang")||"en"}catch(e){return "en"}}
+function norm(s){return s.replace(/\s+/g," ").trim().replace(/\u00a0/g," ")}
+function find(m,k){if(!k)return null;if(m[k])return m[k];if(k.slice(-1)===":"&&m[k.slice(0,-1)])return m[k.slice(0,-1)]+":";return null}
+function apply(){
+var lang=cur();var m=D[lang];if(!m)return;
+try{document.documentElement.lang=lang==="zh"?"zh-CN":(lang==="en"?"en":lang)}catch(e){}
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
+while(n=w.nextNode()){
+var raw=n.nodeValue;if(!raw)continue;var k=norm(raw);if(k.length<2)continue;
+var t=find(m,k);if(!t)continue;
+n.nodeValue=(raw.match(/^\s*/)||[""])[0]+t+(raw.match(/\s*$/)||[""])[0];
+}
+var els=document.querySelectorAll("[placeholder],[title],[aria-label]");
+for(var i=0;i<els.length;i++){var el=els[i];
+["placeholder","title","aria-label"].forEach(function(a){
+var v=el.getAttribute&&el.getAttribute(a);if(!v)return;var t=find(m,norm(v));if(t)el.setAttribute(a,t);
+});
+}
+try{var t2=find(m,norm(document.title||""));if(t2)document.title=t2}catch(e){}
+}
+function mkUI(){
+if(document.getElementById("yb-i18n-box"))return;
+var box=document.createElement("div");box.id="yb-i18n-box";
+var sel=document.createElement("select");sel.id="yb-i18n-sel";sel.setAttribute("aria-label","Language");
+LANGS.forEach(function(l){var o=document.createElement("option");o.value=l[0];o.textContent=l[1];sel.appendChild(o);});
+sel.value=cur();
+sel.addEventListener("change",function(){try{localStorage.setItem("yb_i18n_lang",sel.value)}catch(e){}apply();});
+box.appendChild(sel);document.body.appendChild(box);
+var st=document.createElement("style");st.textContent="#yb-i18n-box{position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,28,51,.92);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:2px 4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}#yb-i18n-box select{background:transparent;color:#eaf1fb;border:0;outline:0;font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;padding:4px 8px;cursor:pointer;appearance:auto}#yb-i18n-box select option{color:#111;background:#fff}";
+document.head.appendChild(st);
+}
+function boot(){mkUI();apply();
+var tm;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(apply,120);}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+})();
+</script>
 <div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
   <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">CleanSlate is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
