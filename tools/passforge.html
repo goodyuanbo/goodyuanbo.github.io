@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PassForge — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of PassForge. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/passforge" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get PassForge — $15</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>PassForge</h1>
+  <span class="tag">Offline password generator &amp; strength audit</span>
+  <span class="tag">100% offline</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="panel" style="background:var(--accent-soft);border-color:var(--accent)">
+  <div style="font-size:14.5px;line-height:1.65">
+    <b>Works with the network unplugged. Your passwords never leave this device.</b><br>
+    <span class="hint">There is no server, no analytics and no clipboard sync here — try it in airplane mode.
+    Online password generators are a privacy contradiction: you are typing the one secret that protects
+    everything else into somebody else's text box, and their JavaScript can read it before it ever reaches
+    your clipboard. This file makes zero network requests. Nothing is saved to disk or to browser storage.</span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>1 · Generate</h3>
+  <div class="bar" style="margin-top:0">
+    <button class="mini" data-mode="pw">Random password</button>
+    <button class="mini" data-mode="pp">Passphrase</button>
+    <span class="spacer"></span>
+    <span class="stat" id="modeHint"></span>
+  </div>
+
+  <div id="pwOpts" style="margin-top:14px">
+    <div class="controls">
+      <div class="fld"><label>Length: <span id="lenVal" class="acc mono">20</span></label>
+        <input type="range" id="len" min="8" max="64" step="1" value="20"></div>
+      <div class="fld" style="grid-column:span 2"><label>Exclude these symbols (optional)</label>
+        <input type="text" id="exclSym" class="mono" placeholder='e.g. " {} \ `' spellcheck="false"></div>
+    </div>
+    <div class="bar">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oLow" checked> a-z</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oUp" checked> A-Z</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oNum" checked> 0-9</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oSym" checked> !@#$…</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oAmb" checked> Avoid look-alikes (0 O 1 l I)</label>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oEach"> Require ≥1 of each class</label>
+    </div>
+  </div>
+
+  <div id="ppOpts" style="margin-top:14px;display:none">
+    <div class="controls">
+      <div class="fld"><label>Words: <span id="wcVal" class="acc mono">5</span></label>
+        <input type="range" id="wc" min="4" max="8" step="1" value="5"></div>
+      <div class="fld"><label>Separator</label><select id="sep">
+        <option value="-">hyphen  -</option><option value=" ">space</option><option value=".">dot  .</option>
+        <option value="_">underscore  _</option><option value=":">colon  :</option><option value="">none</option></select></div>
+      <div class="fld"><label>Transform</label><select id="xf">
+        <option value="lower">lowercase</option><option value="title">Title Case</option>
+        <option value="upper">UPPERCASE</option><option value="random">rAnDoM</option></select></div>
+    </div>
+    <div class="bar">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="oNum2"> Append a number</label>
+      <span class="stat" id="ppStat"></span>
+    </div>
+  </div>
+
+  <div class="out" id="gen" style="margin-top:14px;max-height:220px;font-size:14px"></div>
+  <div class="bar">
+    <button id="gen1" class="primary">Generate</button>
+    <button id="gen10">Generate 10</button>
+    <button class="mini" id="copyAll">Copy all</button>
+    <button class="mini" id="useFirst">Audit the first one →</button>
+    <span class="stat" id="genStat"></span>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>2 · Strength audit</h3>
+  <div class="fld">
+    <label>Password to audit — type a <i>look-alike</i> if you would rather not type the real one</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="audit" class="mono" style="flex:1" placeholder="paste or type here" spellcheck="false" autocomplete="off">
+      <button class="mini" id="showAudit">Show</button>
+    </div>
+  </div>
+  <div style="margin-top:12px;height:9px;border-radius:99px;background:var(--line);overflow:hidden">
+    <div id="meter" style="height:100%;width:0%;background:var(--bad);transition:.25s"></div>
+  </div>
+  <div class="kpis" id="akpis" style="margin-top:14px"></div>
+  <div id="findings"></div>
+  <div class="hint" style="margin-top:10px">
+    Crack-time figures assume an offline attack at <b>10 billion guesses per second</b> (a well-resourced
+    GPU rig). It is an <b>illustrative assumption, not a promise</b>: real speed depends on the hash
+    algorithm, the salt, and whether the service rate-limits login attempts. A slow-hashing service
+    (bcrypt, scrypt, Argon2) makes everything here orders of magnitude harder to crack.
+  </div>
+</div>
+
+<div class="panel">
+  <h3>3 · Batch audit</h3>
+  <div class="hint" style="margin-bottom:8px">
+    ⚠️ <b>Do not paste your real passwords here.</b> Use this to score a list of candidates, or to check
+    look-alikes that have the same <i>shape</i> as your real ones (same length, same character classes,
+    same kind of word). The shape is what determines strength — the exact characters do not matter.
+  </div>
+  <textarea id="batch" rows="5" spellcheck="false" placeholder="one per line&#10;Tr0ub4dor&3&#10;correct-horse-battery-staple&#10;summer2024!"></textarea>
+  <div class="bar">
+    <button id="runBatch" class="primary">Audit all</button>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="reveal"> Show values in results</label>
+    <button class="mini" id="copyBatch">Copy table (TSV)</button>
+    <button class="mini" id="clearBatch">Clear</button>
+    <span class="stat" id="batchStat"></span>
+  </div>
+  <div id="batchOut"></div>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* MAIN LOGIC HERE */
+(function(){
+"use strict";
+
+var WORDS=("able about above accept across act action active actually add address admit adult advice after again against age ago agree ahead air alarm album alive all allow almost alone along already also always among amount ancient anger angle animal announce annual another answer anthem any apart apple apply april arch area argue arise arm army around arrange arrive arrow art article artist ask asleep aspect assess asset assist assume attach attack attempt attend august aunt author autumn average avoid awake award aware away awful baby back bacon bad badge bag balance ball bamboo banana band bank bar bare bargain barn base basic basket bath battery battle beach bean bear beard beat beauty because become bed bee beef beer before begin behind believe bell belong below belt bench bend beneath benefit berry beside best better between beyond bicycle big bike bill bin bird birth biscuit bit bite bitter black blade blame blank blanket blast bleed blind block blood bloom blow blue board boat body boil bold bolt bone bonus book boot border bore born borrow boss both bother bottle bottom bounce bound bowl box boy brain branch brave bread break breath bridge brief bright bring broad broken bronze brook broom brother brown brush bubble bucket budget buffalo build bullet bunch bunny burn burst bury bus bush business busy butter button buy buzz cabin cable cactus cake calm camel camera camp can canal candle candy cannon canoe canvas canyon cap captain car carbon card care cargo carpet carrot carry cart case cash cast castle casual cat catch cattle cause cave cell center century cereal certain chain chair chalk challenge chamber champion chance change channel chaos chapter charge charm chart chase cheap cheat check cheek cheer cheese chef cherry chest chicken chief child chill chimney chin chip chocolate choice choose chorus church cider cigar circle circus citizen city civil claim clam clap class claw clay clean clear clerk clever click cliff climb clock close cloth cloud clown club clue coach coal coast coat coffee coin cold collar collect college colony color column comb combine come comfort comic coming command comment commit common company compare compete complain complete computer concern concert conclude concrete condition conduct confirm conflict confuse connect consider consist constant consult contact contain content contest context continue contract contrast control convert convince cook cool copper copy coral cord core cork corn corner correct cost cotton couch cough could council count country couple courage course court cousin cover cow crab crack craft crane crash crawl crazy cream create credit creek crew cricket crime crisp critic crop cross crow crowd crown cruel cruise crush cry crystal cube culture cup cure curious current curtain curve cushion custom customer cut cycle daily dairy damage dance danger dare dark data date daughter dawn day dead deal dear death debate debt decade decide deck declare decline decorate decrease deep deer defeat defend define degree delay delight deliver demand deny depart depend deposit depth derive describe desert deserve design desire desk despite destroy detail detect determine develop device devote diamond diary dictionary die diet differ difficult dig dinner direct dirt disagree discover discuss disease dish dismiss display distance distinct district divide doctor document dog doll dollar dolphin domain done donkey door double doubt dough down dozen draft drag dragon drama draw dream dress drift drill drink drive drop drug drum dry duck due dull during dust duty dwarf dye dynamic each eager eagle early earn earth ease east easy eat echo edge edit educate effect effort egg eight either elbow elder elect electric elegant element elephant elevator else email emerge emergency emotion employ empty enable encourage end enemy energy engage engine english enjoy enough ensure enter entire entry envelope environment equal equip error escape especially essay essential establish estate estimate even evening event ever every evidence evil exact exam example exceed excellent except exchange excite excuse exercise exhibit exist exit expand expect expense experience expert explain explore export express extend extra extreme eye fabric face fact factor factory fade fail fair faith fall false fame family famous fan fancy far farm farmer fast fat fate father fault favor fear feather feature february federal fee feed feel fellow female fence ferry festival fetch fever few field fierce fifteen fifth fifty fight figure file fill film filter final find fine finger finish fire firm first fish fist fit five fix flag flame flash flat flavor flee fleet flesh flight float flock flood floor flour flow flower fluid fly focus fog fold folk follow food fool foot football force forest forever forget forgive fork form formal former fortune forty forum forward fossil foster found fountain four fourth fox frame free freeze frequent fresh friday friend frog from front frost fruit fuel full fun function fund funny furniture further future gain galaxy gallery game gap garage garbage garden garlic gas gate gather gear general generate generous gentle genuine ghost giant gift ginger giraffe girl give glad glance glass globe glory glove glow glue goal goat gold golden golf good goose govern gown grab grace grade gradual grain grand grant grape graph grasp grass grave gravity gray great green greet grey grid grief grill grocery ground group grow guard guess guest guide guitar gulf gun gut guy gym habit hair half hall hammer hand handle hang happen happy harbor hard hardly harm harvest hat hate have hawk hay hazard head heal health hear heart heat heaven heavy hedge heel height helicopter hello helmet help hen herb here hero hidden hide high hill hint hire history hit hive hobby hockey hold hole holiday hollow holy home honest honey honor hood hook hope horizon horn horse hospital host hot hotel hour house however huge human humble humor hundred hunger hunter hurry hurt husband hut hydrogen ice icon idea ideal identify idle ignore ill illegal illness image imagine immediate impact implement import impress improve inch include income increase indeed index indicate individual industry infant infection inform initial injury inner innocent input inquire insect inside insist inspect inspire install instance instant instead institute instruct instrument insult insurance intelligent intend intense interest interior internal internet interpret interview into introduce invent invest invite involve iron island issue item ivory jacket jail jam january jar jaw jazz jealous jeans jewel job join joke journal journey joy judge juice july jump june jungle junior jury just justice keen keep kettle key kick kid kill kind king kiss kitchen kite kitten knee knife knight knit knock knot know knowledge label labor lace lack ladder lady lake lamp land lane language lantern lap large laser last late laugh launch laundry law lawn lawyer lay layer lazy lead leaf league lean learn lease least leather leave lecture left leg legal legend lemon lend length lens less lesson let letter level liberal library license lid lie life lift light like lily limb limit line linen link lion lip liquid list listen literature little live load loaf loan lobby local locate lock log logic lonely long look loop loose lord lose loss loud love low loyal luck lunch lung luxury machine mad magazine magic magnet mail main maintain major make male mall man manage manner manual manufacture many map marble march margin marine mark market marriage mask mass master match material math matter maximum maybe mayor meadow meal mean measure meat mechanic medal media medical medicine medium meet melt member memory mental mention menu mercy mere merge merit message metal method middle midnight might mild mile military milk mill million mind mine minimum minister minor minute mirror miss mission mistake mix mobile model modern modest modify moment money monitor monkey month monument mood moon moral more morning most mother motion motor mount mouse mouth move movie much mud multiple murder muscle museum mushroom music must mutual nail naked name narrow nation native natural nature navy near neat necessary neck need needle negative neglect neighbor neither nerve nest net network never new news next nice night nine noble noise none noon normal north nose note nothing notice notion novel november now nowhere nuclear number nurse nut oak obey object oblige observe obtain obvious occasion occupy occur ocean october odd off offer office officer official often oil old olive omit once one onion only open opera operate opinion oppose option orange orbit order ordinary organ organize origin other ought ounce our out outdoor outer outline output outside oven over owe owl own oxygen oyster pace pack package page pain paint pair palace pale palm pan panel panic paper parade parent park parrot part partial particular partner party pass passage passenger passion passport past path patient pattern pause pay peace peak peanut pear pearl peasant pen penalty pencil people pepper per percent perfect perform perhaps period permit person pet phase phone photo phrase physical piano pick picture piece pig pigeon pile pill pilot pin pinch pink pipe pitch pity pizza place plain plan plane planet plant plastic plate platform play please pleasure plenty plot plow plug plus pocket poem poet point poison pole police policy polite politics poll pond pony pool poor pop popular port portion portrait pose position positive possess possible post pot potato pound pour poverty powder power practical practice praise pray predict prefer prepare present preserve president press pressure pretend pretty prevent previous price pride priest primary prime prince principal print prior prison private prize probably problem procedure proceed process produce product profession professor profile profit program progress project promise promote prompt proof proper property propose protect protest proud prove provide public publish pull pulse pump pumpkin punch punish pupil purchase pure purple purpose purse pursue push put puzzle qualify quality quantity quarter queen question quick quiet quilt quit quite quiz quote rabbit race rack radar radio raft rag rage raid rail rain raise ranch random range rank rapid rare rat rate rather ratio raw reach react read ready real reality realize rear reason rebel recall receive recent recipe recognize recommend record recover red reduce refer reflect reform refuse regard region register regret regular reject relate relax release reliable relief religion rely remain remark remedy remember remind remote remove rent repair repeat replace reply report represent request require rescue research reserve resist resolve resource respect respond rest restaurant restore result retain retire return reveal reverse review revolution reward rhythm ribbon rice rich rid ride ridge rifle right rigid ring riot ripe rise risk ritual rival river road roast rob robot rock rocket rod role roll roof room root rope rose rough round route routine row royal rub rubber rude rug ruin rule run rural rush sack sacred sad saddle safe sail saint salad salary sale salmon salt same sample sand sandwich satisfy sauce save saw say scale scan scarce scare scene schedule scheme scholar school science scissors scope score scout scrap scream screen script sea seal search season seat second secret section sector secure see seed seek seem seize seldom select self sell senate send senior sense sentence separate september series serious serve service session set settle seven several severe sew shade shadow shake shall shame shape share sharp shave sheep sheet shelf shell shelter shift shine ship shirt shock shoe shoot shop shore short shot should shoulder shout show shower shrink shut shy sick side sight sign signal silence silk silly silver similar simple since sincere sing single sink sir sister sit site situation six size skate sketch skill skin skip skirt sky slab slam sleep sleeve slide slight slip slope slot slow small smart smell smile smoke smooth snack snake snap snow soap soccer social sock soft soil solar soldier solid solution solve some son song soon sorry sort soul sound soup source south space spare spark speak special specific speech speed spell spend sphere spice spike spirit spite split spoil spoke spoon sport spot spread spring square squeeze stable staff stage stair stake stamp stand standard star stare start state station statue status stay steady steal steam steel steep steer stem step stick stiff still stir stock stomach stone stop store storm story stove straight strain strange straw stream street strength stress stretch strict strike string strip stroke strong structure struggle student study stuff stupid style subject submit substance succeed success such sudden suffer sugar suggest suit summer summit sun super supply support suppose sure surface surprise surround survey survive suspect sustain swallow swamp swear sweat sweep sweet swell swim swing switch symbol sympathy system table tackle tail take tale talent talk tall tank tape target task taste tax taxi tea teach team tear technical technique telephone television tell temper temple ten tenant tend tennis tent term terrible territory test text than thank that theater theme then theory there these thick thin thing think third thirst thirty this thorough those though thought thousand thread threat three throat through throw thumb thunder thus ticket tide tidy tie tiger tight till timber time tin tiny tip tire tired title today toe together toilet tomato tomorrow tone tongue tonight tool tooth top topic total touch tough tour toward towel tower town toy trace track trade tradition traffic trail train trait transfer transform transport trap trash travel tray treat tree trend trial tribe trick trip troop trouble truck true trust truth try tube tune tunnel turn twelve twenty twice twin twist two type typical ugly ultimate umbrella unable uncle under understand unfair uniform union unique unit unite universe university unknown unless unlike until upon upper upset urban urge urgent use useful usual utility vacant vacation valley valuable value van vanish variety various vary vast vegetable vehicle venture verb verse version very vessel victim victory video view village vine violence virtual virtue virus visible vision visit visitor vital voice volume volunteer vote vowel voyage wage wagon waist wait wake walk wall wallet walnut wander want war warm warn wash waste watch water wave way weak wealth weapon wear weather weave wedding week weigh weight welcome well west wet whale what wheat wheel when where whether which while whisper white who whole why wide widow width wife wild will win wind window wine wing winner winter wipe wire wise wish witness woman wonder wood wool word work world worry worth would wound wrap write wrong yard yarn year yellow yes yesterday yet yield young your youth zebra zero zone zoo zoom").split(" ");
+
+var WSET={};
+(function(){for(var wi=0;wi<WORDS.length;wi++) WSET[WORDS[wi]]=1;})();
+
+var WEAK=("123456 123456789 12345678 12345 1234567 1234567890 qwerty 123123 111111 123321 654321 666666 123456789a "+
+"password passw0rd p@ssw0rd p@ssword passwd password1 password123 password12 pass pass1 "+
+"iloveyou abc123 123abc a123456 123456a 5201314 1q2w3e4r 1qaz2wsx qwerty123 qwertyuiop qwerty1 "+
+"asdfghjkl asdf1234 zxcvbnm zxcvbnm123 admin admin123 administrator root root123 toor "+
+"letmein welcome welcome1 monkey dragon shadow master superman michael jennifer jordan harley ranger "+
+"hunter buster thomas tigger rover jesus ninja mustang jordan23 nicole daniel joshua maggie summer winter autumn spring "+
+"sunshine princess princess1 soccer baseball football basketball hockey cheerleader blink182 "+
+"whatever starwars startrek matrix merlin freedom freedom1 chocolate ginger "+
+"trustno1 batman superman1 qazwsx qazwsx123 1qazzaq 123qwe qwe123 "+
+"000000 11111111 112233 123123123 1234abcd a123456789 aa123456 abcd1234 abc123456 "+
+"internet internet1 computer laptop office family friends school college university "+
+"money1 money love1 love2 secret secrets secret1 hello hello123 hi123 "+
+"test test123 testing default changeme changeme1 temp temp123 "+
+"linkedin facebook google gmail yahoo twitter instagram snapchat tiktok netflix amazon apple microsoft "+
+"paypal banking bank1 credit debit visa mastercard "+
+"qwerty12 qwert asdf asdfgh 123654 121212 101010 1111111 222222 555555 7777777 88888888 999999 "+
+"abcdef abcdefgh abcabc abc12345 zaq12wsx zaq1zaq1 1q2w3e 1q2w3e4r5t "+
+"picture1 gallery photo1 flower1 sunshine1 iloveyou1 iloveu babe baby baby123 "+
+"killer killer1 killer2 dangerous dangerous1 god god1 godbless jesus1 christ "+
+"whatever1 whatever2 nothing nothing1 nobody nopassword password? passwort "+
+"star star1 moon moon1 earth mars pluto "+
+"abcd abdc aabb aabbcc 1a2b3c4d 147258369 159753 987654321 852456 "+
+"mysecret mypassword mypass mypass1 myname me123 me12345 "+
+"work work1 home home1 user user1 guest guest1 login login1 access access1 "+
+"security secure secure1 private public public1 "+
+"chelsea arsenal liverpool manchester barcelona real madrid juventus "+
+"pokemon pokemon1 digimon naruto naruto1 one piece onepiece "+
+"coffee1 coffee tea1 beer1 whiskey vodka "+
+"december january1 february1 march1 april1 may1 june1 july1 "+
+"2018 2019 2020 2021 2022 2023 2024 2025 2026 1990 1991 1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 "+
+"pass4word p4ssw0rd p455w0rd p4ssword pa55word paw0rd "+
+"football1 baseball1 soccer1 tennis1 golf1 "+
+"charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey xray yankee zulu "+
+"arsenal1 chelsea1 tottenham everton "+
+"loveme loveme1 loveme2 trustme trustme1 "+
+"whatever123 nothing123 hello1 hello2 hi1 hi2 ok123 "+
+"qwertyasd asdfqwer qweasd qweasdzxc "+
+"1q1q1q 1q2w3e4r5t6y 1qazxsw2 1qaz!QAZ 1qaz@WSX "+
+"albert alex alice amanda amber andrew angela anna anthony arthur ashley "+
+"barbara benjamin betty billy bobby brandon brenda brian bruce "+
+"carl carol catherine charles chris christina christopher cindy clara cody connor craig "+
+"dairy daniel123 dave david deborah dennis diana diane donald donna dorothy douglas duncan "+
+"edward elaine elena elizabeth emily emma eric erik ethan eugene eva evan "+
+"faith felicia fiona frances frank fred "+
+"gary george gerald ginger grace greg "+
+"hannah harold harry heather helen henry "+
+"ian irene isaac isabel ivan "+
+"jack jackie jacob james jamie jane janet jasmine jason jay jeff jennifer123 jenny jeremy jerry jesse jessica jimmy joan john johnny jonathan jordan1 joseph josh joyce juan judy julia julie justin "+
+"karen katherine katie keith kelly ken kenneth kevin kristin "+
+"laura lauren lawrence leah leo leslie linda lisa lois lori louis lucas lucy luke lynn "+
+"marcus margaret maria marie mark martha martin mary mason matt matthew maureen megan melissa melvin meredith mike mildred miranda molly monica "+
+"nathan neil nicole1 noah norma "+
+"olive oliver olivia oscar "+
+"pamela patricia patrick paul paula peter philip phillip phoebe phyllis "+
+"rachel ralph randy raymond rebecca regina richard ricky rita robert roberto robin roger ronald rose roy russell ruth ryan "+
+"samantha samuel sandra sara sarah scott sean shannon sharon sheila shelley shirley sophia stacey stanley stephanie stephen steven susan sydney "+
+"tammy tanya teresa terry thomas1 tiffany tim timothy tina toby todd tom tommy tony tracy travis trevor tricia "+
+"valerie vanessa vera vernon veronica victor victoria vincent violet vivian "+
+"walter wanda warren wayne wendy wesley william willie "+
+"xavier "+
+"yolanda yvonne "+
+"zachary zoe "+
+"admin1 admin12 adminadmin administrator1 sysadmin webmaster webmaster1 "+
+"oracle mysql postgres sqlserver database db123 "+
+"cisco cisco123 hp123 dell123 ibm123 "+
+"windows linux ubuntu debian fedora centos redhat "+
+"iphone ipad android samsung nokia huawei xiaomi "+
+"changeme123 newpassword newpass oldpassword "+
+"letmein123 letmein1 opensesame sesame "+
+"booboo booger poopoo tinkerbell "+
+"money money123 cash cash1 "+
+"bitcoin bitcoin1 crypto wallet "+
+"corona covid covid19 vaccine "+
+"pokemon123 minecraft roblox fortnite "+
+"aaaaaa aaaaaa1 bbbbbb cccccc dddddd "+
+"qweqwe asdasd zxczxc "+
+"12qwaszx 1qaz2wsx3edc 1qazxsw23edc "+
+"telephone mobile cellphone "+
+"horse horse1 correct correcthorse batterystaple "+
+"marine snow tree sun flower river ocean mountain "+
+"gandalf frodo aragorn legolas "+
+"batman1 superman123 spiderman ironman hulk thor loki "+
+"mickey minnie donaldduck goofy pluto "+
+"tigger1 pooh winnie "+
+"abcd12345 abcd!234 qwer!234 "+
+"pass1234 pass12345 pass@123 "+
+"hellohello hahaha hehehe xxxxxx xxxxxxx "+
+"iloveyou123 iloveyou2 missyou missyou1 "+
+"forever forever1 foreverlove "+
+"babygirl babyboy sweetie honey honey1 "+
+"princess123 princess12 queen123 king123 "+
+"liverpool1 manchester1 barcelona1 "+
+"chocolate1 vanilla strawberry "+
+"sunshine123 rainbow rainbow1 "+
+"whateveru wantwant needneed "+
+"secret123 secret12 mysecret1 "+
+"login123 signin welcome123 "+
+"testtest testtest1 demo demo1 demo123 "+
+"guest1234 user1234 user12345 "+
+"default1 default123 changeme12 "+
+"p@ssw0rd1 p@55w0rd pa55w0rd "+
+"q1w2e3r4 q1w2e3 qweasd123 "+
+"a1b2c3d4 a1b2c3 ab12cd34 "+
+"z1x2c3v4 zxc123 asd123 "+
+"monkey123 monkey1 dragon1 shadow1 master1 "+
+"michael1 jennifer1 jordan23 "+
+"sunshine! sunshine@ "+
+"password! password@1 password#1 "+
+"summer2024 winter2024 spring2024 fall2024 "+
+"summer1 summer12 winter1 winter12 "+
+"spring1 autumn1 "+
+"january2024 december2024 "+
+"2024! 2025! 2026! 2023! "+
+"welcome123 welcome12 welcome! "+
+"shine shine1 bright bright1 "+
+"flower flower12 garden garden1 "+
+"chocolate2 coffee2 "+
+"iloveyou! iloveyou@ "+
+"trustno1! letmein! admin! "+
+"qwerty!@# 1qaz2wsx! "+
+"passw0rd1 p@ssword1 "+
+"mypass123 mypass1234 "+
+"abc123! abc123@ abc123# "+
+"12345! 123456! 1234567! 12345678! "+
+"qwerty2024 password2024 admin2024 "+
+"love123 love1234 "+
+"nikita natasha "+
+"slava ukraine "+
+"whatever! whatever@ "+
+"ncc1701 007007 "+
+"starwars1 startrek1 "+
+"troubador troubadour troubadore tr0ub4dor "+
+"bond jamesbond "+
+"miller smith jones johnson williams brown davis wilson anderson taylor moore thomas jackson white harris martin "+
+"secretpassword strongpassword securepassword "+
+"1password lastpass dashlane bitwarden keeper "+
+"norton mcafee kaspersky avast "+
+"paypal1 stripe1 shopify1 "+
+"master123 master12 "+
+"shadow123 shadow12 "+
+"superman2 spiderman1 "+
+"aaron adam adrian alan albert alfred allen alvin amos andre angelo antonio arnold "+
+"barbara1 barry beatrice ben bernard beth betty1 blake bob bonnie brad brenda1 brett brian1 bruce1 bryan "+
+"caleb calvin cameron carl1 carlos carmen carol1 casey cecil chad charles1 charlotte chester chloe christian christine cindy1 claire clarence claudia cliff clinton cole colin colonel cora cory crystal1 curtis "+
+"dale damon dan dana daniel1 darren darryl dave1 dean debbie debra dennis1 derek desmond devin diana1 diane1 dick don donald1 doris dorothy1 douglas1 duane dwayne "+
+"earl eddie edgar edith edmund eduardo edward1 elaine1 elias elijah elliot ellis elmer eloise elsie elton elvis emil emmanuel enrique eric1 erica erik1 ernest esteban ester ethan1 eugene1 eva1 evan1 evelyn "+
+"fabian felipe felix fernando fidelity finn florence ford francis francisco frank1 franklin fred1 freddie frederick "+
+"gabriel gail gary1 gene geoffrey george1 georgia gerald1 gerard gilbert gladys glenn gloria gordon grace1 grant greg1 gregory guadalupe guillermo gustavo guy "+
+"hannah1 harold1 harry1 hayden heather1 hector heidi helen1 henry1 herbert hilary holly hope horace howard hubert hugh hugo humphrey "+
+"ian1 ida ignacio imelda ines ingrid irene1 irma isaac1 isabel1 ismael israel ivan1 ivy "+
+"jack1 jackie1 jacob1 jacqueline jamaal james1 jamie1 jan janet1 janice jared jarrod jasmin jason1 javier jay1 jean jeanne jeff1 jeffrey jennie jennifer2 jeremy1 jerome jerry1 jesse1 jessica1 jesus1 jim joan1 joaquin joe joel john1 johnnie johnny1 jon jonathan1 jorge jose joseph1 joshua1 josiah joy joyce1 juan1 judith judy1 julia1 julian julie1 julio june1 justin1 "+
+"kara karen1 karl kate katherine1 kathleen kathryn katie1 kayla keith1 kelly1 kelsey ken1 kenneth1 kenny kevin1 kiley kim kimberly king kirk kristen kristin1 kurt kyle "+
+"lance lara larry laura1 laurel lauren1 lawrence1 leah1 leanne lee leilani len leo1 leon leona leslie1 lester lewis lia liam lidia lila lillian lily linda1 lindsay linwood lionel lisa1 liz lois1 lola lorena lorenzo lori1 lorna lou louis1 louise lucas1 lucia lucille lucinda lucy1 luigi luke1 luna luther lydia lynn1 "+
+"mabel madeline madge maggie1 mahmood malcolm mandy manny manuel marcus1 marcy margaret1 margarita maria1 marian marie1 mariela marilyn mario marion marisa marissa mark1 marlene marlon marsha martha1 martin1 marvin mary1 maryann mason1 mathew matt1 matthew1 maureen1 maurice max maxine maya mccoy megan1 meguell melanie melinda melissa1 melvin1 mercer meredith1 merrill micah michael1 michele michelle miguel mike1 milan mildred1 miles milton mina minnie1 miranda1 miriam missy mitch mitchell mollie molly1 monica1 monique monroe monty morgan morris moses moshe "+
+"nancy naomi natalie natasha1 neal ned neil1 nelda nelson nicholas nichole nick nicole2 nina noah1 noel noelani nolan nora norbert norma1 norman "+
+"olga olive1 oliver1 olivia1 omar "+
+"pacifica page paige pam pamela1 parker pasquale pat patricia1 patrick1 patsy paul1 paula1 paulo pedro peggy penelope percy perry pete peter1 phil philip1 phillip1 phoebe1 phyllis1 pierce pietro "+
+"quang queen quentin quinn quinton "+
+"rafael raleigh ralph1 ramon randall randy1 raoul raphael rashad ray raymond1 rebecca1 reggie regina1 renée renee reuben rex rhoda rhonda ria rick ricky1 rita1 robert1 roberta roberto1 robin1 rochelle rock roderick rodney roger1 roland rolando roman ronald1 ronnie roosevelt rory rosa rose1 rosemary ross roy1 royce ruby rudolph rudy rufus rupert russell1 ruth1 ryan1 "+
+"sabrina sadie sal salvador sam samantha1 samir samuel1 sandra1 sandy sara1 sarah1 saul scott1 sean1 sebastian selena selma sergio seth seymour shana shane shannon1 shaun shawn sheila1 sheldon shelby shelley1 shelton sheridan sherman sherry shirley1 sidney simon sonia sonya sophia1 staci stacy stan stanford stanley1 stefanie stella stephan stephanie1 stephen1 steve steven1 stewart stuart sue suzanne sydney1 sylvia "+
+"tabitha talon tamara tami tammy1 tanya1 tara tasha ted teresa1 terrence terry1 tess tessa thad thelma theodore theresa thomas2 tiffany1 tilly tim1 timothy1 tina1 toby1 todd1 tom1 tommy1 tony1 tracey tracy1 travis1 trenton trevor1 tricia1 tristan trudy "+
+"val valentina valerie1 van vance vanessa1 vasco vaughn velma vera1 vern verna vernon1 veronica1 vicki vicky victor1 victoria1 vida vince vincent1 vinny viola violet1 virgil virginia vivian1 "+
+"wade wally walter1 wanda1 ward warren1 wayne1 wesley1 wilbert wilda wilfred wilfredo will willard william1 willie1 willis wilma wilson1 winfred winston "+
+"xavier1 "+
+"yolanda1 yvette yvonne1 "+
+"zachariah zachary1 zack zelda zoe1").split(" ");
+
+var KB=["1234567890","qwertyuiop","asdfghjkl","zxcvbnm","!@#$%^&*()"];
+
+var MODE="pw";
+var GENERATED=[];
+var BATCHROWS=[];
+
+function rnd(n){
+  var a=new Uint32Array(n);
+  if(window.crypto&&window.crypto.getRandomValues){
+    window.crypto.getRandomValues(a);
+  } else {
+    for(var i=0;i<n;i++) a[i]=Math.floor(Math.random()*4294967296);
+  }
+  return a;
+}
+function rndBelow(max){
+  if(max<=0) return 0;
+  var limit=Math.floor(4294967296/max)*max;
+  var v;
+  do{ v=rnd(1)[0]; }while(v>=limit);
+  return v%max;
+}
+function pick(arr){return arr[rndBelow(arr.length)];}
+
+function buildPool(){
+  var p="";
+  if($("oLow").checked) p+="abcdefghijklmnopqrstuvwxyz";
+  if($("oUp").checked) p+="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  if($("oNum").checked) p+="0123456789";
+  if($("oSym").checked) p+="!@#$%^&*()-_=+[]{};:,.?/";
+  if($("oAmb").checked) p=p.replace(/[0O1lI]/g,"");
+  var ex=$("exclSym").value||"";
+  for(var i=0;i<ex.length;i++){
+    p=p.split(ex.charAt(i)).join("");
+  }
+  return p;
+}
+function genPassword(){
+  var pool=buildPool();
+  if(!pool.length){toast("Character pool is empty");return null;}
+  var len=parseInt($("len").value,10);
+  var out="";
+  if($("oEach").checked){
+    var sets=[];
+    if($("oLow").checked) sets.push("abcdefghijklmnopqrstuvwxyz");
+    if($("oUp").checked) sets.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    if($("oNum").checked) sets.push("0123456789");
+    if($("oSym").checked) sets.push("!@#$%^&*()-_=+[]{};:,.?/");
+    if($("oAmb").checked){
+      for(var s=0;s<sets.length;s++) sets[s]=sets[s].replace(/[0O1lI]/g,"");
+    }
+    var exs=$("exclSym").value||"";
+    for(var a=0;a<sets.length;a++){
+      for(var b=0;b<exs.length;b++) sets[a]=sets[a].split(exs.charAt(b)).join("");
+    }
+    for(var c=0;c<sets.length;c++){
+      if(sets[c].length) out+=pick(sets[c].split(""));
+    }
+  }
+  while(out.length<len) out+=pick(pool.split(""));
+  var arr=out.split("");
+  for(var i=arr.length-1;i>0;i--){
+    var j=rndBelow(i+1);var t=arr[i];arr[i]=arr[j];arr[j]=t;
+  }
+  return arr.join("").slice(0,len);
+}
+function genPassphrase(){
+  var n=parseInt($("wc").value,10);
+  var sep=$("sep").value;
+  var xf=$("xf").value;
+  var parts=[];
+  for(var i=0;i<n;i++) parts.push(pick(WORDS));
+  for(var j=0;j<parts.length;j++){
+    if(xf==="title") parts[j]=parts[j].charAt(0).toUpperCase()+parts[j].slice(1);
+    else if(xf==="upper") parts[j]=parts[j].toUpperCase();
+    else if(xf==="random"){
+      var s="";
+      for(var k=0;k<parts[j].length;k++){
+        s+=rndBelow(2)?parts[j].charAt(k).toUpperCase():parts[j].charAt(k);
+      }
+      parts[j]=s;
+    }
+  }
+  var out=parts.join(sep);
+  if($("oNum2").checked) out+=String(rndBelow(1000));
+  return out;
+}
+
+function poolSize(pw){
+  var n=0;
+  if(/[a-z]/.test(pw)) n+=26;
+  if(/[A-Z]/.test(pw)) n+=26;
+  if(/[0-9]/.test(pw)) n+=10;
+  if(/[^a-zA-Z0-9]/.test(pw)) n+=33;
+  return n;
+}
+function leet(s){
+  return String(s).toLowerCase()
+    .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e").replace(/4/g,"a")
+    .replace(/5/g,"s").replace(/7/g,"t").replace(/8/g,"b").replace(/9/g,"g")
+    .replace(/@/g,"a").replace(/\$/g,"s").replace(/!/g,"i").replace(/\+/g,"t");
+}
+function hasRun(pw){
+  var i,run=0;
+  for(i=1;i<pw.length;i++){
+    if(pw.charCodeAt(i)===pw.charCodeAt(i-1)){run++;if(run>=2)return true;}
+    else run=0;
+  }
+  return false;
+}
+function sequenceRun(pw){
+  var i,up=1,dn=1;
+  for(i=1;i<pw.length;i++){
+    var d=pw.charCodeAt(i)-pw.charCodeAt(i-1);
+    if(d===1) up++; else up=1;
+    if(d===-1) dn++; else dn=1;
+    if(up>=4||dn>=4) return true;
+  }
+  return false;
+}
+function kbRun(pw){
+  var lc=pw.toLowerCase(),i,r,c,r2,c2,run=1;
+  for(i=1;i<lc.length;i++){
+    var found=false;
+    for(r=0;r<KB.length&&!found;r++){
+      var a=KB[r].indexOf(lc.charAt(i-1));
+      var b=KB[r].indexOf(lc.charAt(i));
+      if(a>=0&&b>=0&&Math.abs(a-b)===1) found=true;
+    }
+    if(found) run++; else run=1;
+    if(run>=4) return true;
+  }
+  return false;
+}
+function effectiveLength(pw){
+  var out=1;
+  for(var i=1;i<pw.length;i++){
+    var d=pw.charCodeAt(i)-pw.charCodeAt(i-1);
+    if(d===0) continue;
+    if(d===1||d===-1){
+      out+=0.5;
+      continue;
+    }
+    out+=1;
+  }
+  return out;
+}
+function dictHit(pw){
+  var raw=String(pw).toLowerCase();
+  var l=leet(pw);
+  var cands=[raw,raw.replace(/[^a-z]/g,""),l,l.replace(/[^a-z]/g,""),
+    l.replace(/^[^a-z]+/,"").replace(/[^a-z]+$/,""),
+    raw.replace(/^[^a-z0-9]+/,"").replace(/[^a-z0-9]+$/,"")];
+  var m=raw.match(/^([a-z]+?)[\d!@#$%^&*._-]*$/);
+  if(m) cands.push(m[1]);
+  var m2=l.match(/^([a-z]+?)[\d!@#$%^&*._-]*$/);
+  if(m2) cands.push(m2[1]);
+  for(var i=0;i<cands.length;i++){
+    if(cands[i]&&cands[i].length>=4&&WEAK.indexOf(cands[i])>=0) return cands[i];
+  }
+  return null;
+}
+function wordAnalysis(pw){
+  var l=leet(pw);
+  var runs=l.match(/[a-z]{4,}/g)||[];
+  var hits=[];
+  for(var i=0;i<runs.length;i++) if(WSET[runs[i]]) hits.push(runs[i]);
+  return {runs:runs,hits:hits};
+}
+function rate(ent){
+  if(ent<28) return ["Very weak","bad"];
+  if(ent<36) return ["Weak","bad"];
+  if(ent<50) return ["Reasonable","warn"];
+  if(ent<70) return ["Strong","good"];
+  return ["Excellent","good"];
+}
+function crackTime(ent){
+  var secs=Math.pow(2,Math.max(ent-1,0))/1e10;
+  if(secs<1) return "instantly";
+  if(secs<60) return "about "+Math.round(secs)+" second"+(Math.round(secs)===1?"":"s");
+  if(secs<3600) return "about "+Math.round(secs/60)+" minute"+(Math.round(secs/60)===1?"":"s");
+  if(secs<86400) return "about "+Math.round(secs/3600)+" hour"+(Math.round(secs/3600)===1?"":"s");
+  if(secs<2592000) return "about "+Math.round(secs/86400)+" day"+(Math.round(secs/86400)===1?"":"s");
+  var yrs=secs/31557600;
+  if(yrs<1000) return "about "+Math.round(yrs)+" year"+(Math.round(yrs)===1?"":"s");
+  if(yrs<1e6) return "about "+Math.round(yrs/1000)+" thousand years";
+  if(yrs<1e9) return "about "+Math.round(yrs/1e6)+" million years";
+  if(yrs<1e12) return "about "+Math.round(yrs/1e9)+" billion years";
+  return "longer than the age of the universe";
+}
+
+function analyze(pw){
+  if(!pw) return null;
+  var pool=poolSize(pw);
+  var naive=pw.length*Math.log2(pool||1);
+  var eff=effectiveLength(pw);
+  var ent=eff*Math.log2(pool||1);
+  var issues=[];
+  var wordFlagged=false;
+  var d=dictHit(pw);
+  var wa=wordAnalysis(pw);
+  if(d){
+    issues.push(["bad","Found in the list of most-breached passwords (\u201c"+d+"\u201d). Attackers try this list first — it falls in seconds no matter how many symbols you add."]);
+    ent=Math.min(ent,10);
+  } else if(wa.hits.length>=2&&wa.runs.length>=3){
+    var wc2=Math.max(wa.hits.length,wa.runs.length);
+    ent=wc2*Math.log2(WORDS.length);
+    wordFlagged=true;
+    issues.push(["ok","Passphrase built from about "+wc2+" words ("+wa.hits.join(", ")+
+      (wa.hits.length<wc2?"…":"")+"). Scored as "+wc2+" × log2("+WORDS.length+") ≈ "+ent.toFixed(0)+
+      " bits — the honest word-list estimate. Character-count maths overstates passphrases badly; "+
+      "add words rather than symbols to make this stronger."]);
+  } else if(wa.hits.length>0&&wa.hits[0].length>=0.5*pw.length&&pw.length<24){
+    ent=Math.min(ent,Math.log2(WORDS.length)+8);
+    wordFlagged=true;
+    issues.push(["bad","Built on the single common word \u201c"+wa.hits[0]+
+      "\u201d plus decoration. Word-plus-number rules run before brute force in every cracking tool, so the extra digits and symbols buy far less than the character count implies."]);
+  }
+  if(pw.length<12) issues.push(["mid","Only "+pw.length+" characters. Length is the single biggest lever you have — 16+ is the modern floor."]);
+  if(pool<=26) issues.push(["mid","Only one character class. Mixing cases, digits and symbols multiplies the search space."]);
+  if(hasRun(pw)) issues.push(["mid","Contains a repeated run (aaa, 111). Repeated blocks are checked for by every wordlist rule."]);
+  if(sequenceRun(pw)) issues.push(["bad","Contains a straight sequence (abcd, 1234, 4321). Crackers generate these before they even start brute-forcing."]);
+  if(kbRun(pw)) issues.push(["bad","Contains a keyboard walk (qwerty, asdf, 1qaz). These are a standard pattern in every cracking dictionary."]);
+  if(/^(19|20)\d{2}$/.test(pw)) issues.push(["bad","It is just a year. Years are tried first against any account with a known signup date."]);
+  if(/^\d+$/.test(pw)) issues.push(["bad","Digits only — the search space is tiny even at 12 characters."]);
+  if(/^[a-z]+$/.test(pw)&&pw.length<20) issues.push(["mid","Lowercase letters only."]);
+  var m=pw.match(/^([A-Za-z]+)(\d{1,4})([!@#$%^&*]?)$/);
+  if(m&&m[1].length>=4&&!d&&!wordFlagged) issues.push(["mid","A real word with a small number and maybe a symbol ("+m[1]+"+"+m[2]+m[3]+"). This exact shape is the most common password pattern in breach corpora — append-only rules barely help."]);
+  if(!issues.length) issues.push(["ok","No dictionary, sequence, keyboard-walk or repetition pattern found. "+
+    (pw.length>=16?"Long and clean — this is what a good password looks like.":"Bump the length past 16 and it becomes very hard to attack.")]);
+  ent=Math.max(ent,0);
+  var r=rate(ent);
+  return {pw:pw,len:pw.length,entropy:ent,naive:naive,rating:r[0],cls:r[1],issues:issues,crack:crackTime(ent)};
+}
+
+function renderAudit(){
+  var pw=$("audit").value;
+  var a=analyze(pw);
+  if(!a){
+    $("meter").style.width="0%";
+    $("akpis").innerHTML="";
+    $("findings").innerHTML='<div class="hint" style="padding:8px 0">Type something above and this fills in live.</div>';
+    return;
+  }
+  var pct=Math.min(100,a.entropy/1.28);
+  $("meter").style.width=pct+"%";
+  $("meter").style.background=a.cls==="good"?"var(--good)":(a.cls==="warn"?"var(--warn)":"var(--bad)");
+  var h="";
+  h+='<div class="kpi"><div class="k">Rating</div><div class="v '+a.cls+'">'+a.rating+'</div><div class="s">'+a.len+' characters</div></div>';
+  h+='<div class="kpi"><div class="k">Entropy</div><div class="v">'+a.entropy.toFixed(1)+'<span style="font-size:12px;color:var(--muted)"> bits</span></div><div class="s">naive: '+a.naive.toFixed(1)+' bits</div></div>';
+  h+='<div class="kpi"><div class="k">Offline crack time</div><div class="v" style="font-size:16px">'+esc(a.crack)+'</div><div class="s">at 10<sup>10</sup> guesses/sec (assumed)</div></div>';
+  h+='<div class="kpi"><div class="k">Character classes</div><div class="v">'+(poolSize(pw)===95?4:(poolSize(pw)===62?3:(poolSize(pw)===52||poolSize(pw)===36?2:1)))+'</div><div class="s">pool size '+poolSize(pw)+'</div></div>';
+  $("akpis").innerHTML=h;
+  var f='<table><tr><th style="width:74px">Severity</th><th>Finding</th></tr>';
+  for(var i=0;i<a.issues.length;i++){
+    var cls=a.issues[i][0]==="bad"?"no":(a.issues[i][0]==="mid"?"mid":"ok");
+    var lab=a.issues[i][0]==="bad"?"Fix":(a.issues[i][0]==="mid"?"Note":"Good");
+    f+='<tr><td><span class="pill '+cls+'">'+lab+'</span></td><td>'+esc(a.issues[i][1])+'</td></tr>';
+  }
+  f+="</table>";
+  $("findings").innerHTML=f;
+}
+
+function renderGen(){
+  var h="";
+  for(var i=0;i<GENERATED.length;i++){
+    var a=analyze(GENERATED[i]);
+    h+='<div style="display:flex;gap:10px;align-items:center;padding:3px 0;flex-wrap:wrap">'+
+      '<span style="flex:1;min-width:240px;word-break:break-all">'+esc(GENERATED[i])+'</span>'+
+      '<span class="mono '+a.cls+'" style="font-size:12px">'+a.entropy.toFixed(0)+' bits</span>'+
+      '<button class="mini" data-g="'+i+'">Use</button>'+
+      '<button class="mini" data-c="'+i+'">Copy</button></div>';
+  }
+  if(!h) h='<span class="hint">Press Generate.</span>';
+  $("gen").innerHTML=h;
+  var ub=$("gen").querySelectorAll("button[data-g]");
+  for(var j=0;j<ub.length;j++){
+    ub[j].onclick=function(){
+      $("audit").value=GENERATED[parseInt(this.getAttribute("data-g"),10)];
+      $("audit").type="text";
+      $("showAudit").textContent="Hide";
+      renderAudit();
+      toast("Loaded into the audit box");
+    };
+  }
+  var cb=$("gen").querySelectorAll("button[data-c]");
+  for(var k=0;k<cb.length;k++){
+    cb[k].onclick=function(){copy(GENERATED[parseInt(this.getAttribute("data-c"),10)],"Password");};
+  }
+}
+
+function doGen(n){
+  GENERATED=[];
+  for(var i=0;i<n;i++){
+    var v=MODE==="pw"?genPassword():genPassphrase();
+    if(v) GENERATED.push(v);
+  }
+  renderGen();
+  var a=GENERATED.length?analyze(GENERATED[0]):null;
+  $("genStat").textContent=a?(a.entropy.toFixed(1)+" bits · "+a.rating.toLowerCase()):"";
+}
+
+function refreshMode(){
+  $("pwOpts").style.display=MODE==="pw"?"":"none";
+  $("ppOpts").style.display=MODE==="pp"?"":"none";
+  var mb=document.querySelectorAll("button[data-mode]");
+  for(var i=0;i<mb.length;i++){
+    mb[i].className=mb[i].getAttribute("data-mode")===MODE?"mini primary":"mini";
+  }
+  $("modeHint").textContent=MODE==="pw"?
+    "Random strings — best for anything stored in a password manager.":
+    "Word-based — best for anything you have to type from memory (disk encryption, a master password, a Wi-Fi passphrase).";
+  if(MODE==="pp"){
+    var n=parseInt($("wc").value,10);
+    var bits=n*Math.log2(WORDS.length);
+    if($("oNum2").checked) bits+=Math.log2(1000);
+    $("ppStat").textContent=WORDS.length+" words in the offline list · ~"+bits.toFixed(0)+" bits at "+n+" words";
+  }
+}
+
+function runBatch(){
+  var lines=$("batch").value.split("\n");
+  BATCHROWS=[];
+  for(var i=0;i<lines.length;i++){
+    var v=lines[i].replace(/\r/g,"").trim();
+    if(!v) continue;
+    BATCHROWS.push(analyze(v));
+  }
+  renderBatch();
+}
+function renderBatch(){
+  var show=$("reveal").checked;
+  if(!BATCHROWS.length){
+    $("batchOut").innerHTML='<div class="hint" style="padding:8px 0">No results yet.</div>';
+    $("batchStat").textContent="";
+    return;
+  }
+  var weak=0;
+  var h='<table><tr><th>#</th>'+(show?"<th>Value</th>":"")+'<th class="num">Len</th><th class="num">Entropy</th><th>Rating</th><th class="num">Crack time (assumed)</th><th>Top finding</th></tr>';
+  for(var i=0;i<BATCHROWS.length;i++){
+    var a=BATCHROWS[i];
+    if(a.cls==="bad") weak++;
+    var top=a.issues.length?a.issues[0][1]:"—";
+    if(top.length>90) top=top.slice(0,90)+"…";
+    h+='<tr><td class="mono" style="color:var(--muted)">'+(i+1)+'</td>'+
+      (show?'<td class="mono" style="word-break:break-all">'+esc(a.pw)+'</td>':"")+
+      '<td class="num mono">'+a.len+'</td>'+
+      '<td class="num mono">'+a.entropy.toFixed(1)+'</td>'+
+      '<td><span class="pill '+(a.cls==="good"?"ok":a.cls==="warn"?"mid":"no")+'">'+a.rating+'</span></td>'+
+      '<td class="num mono">'+esc(a.crack)+'</td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+esc(top)+'</td></tr>';
+  }
+  h+="</table>";
+  h+='<div class="hint" style="margin-top:10px">'+BATCHROWS.length+" entr"+(BATCHROWS.length===1?"y":"ies")+" · "+
+     '<b class="'+(weak?"bad":"good")+'">'+weak+'</b> rated weak or very weak.</div>';
+  $("batchOut").innerHTML=h;
+  $("batchStat").textContent=BATCHROWS.length+" checked · "+weak+" weak";
+}
+
+var mb=document.querySelectorAll("button[data-mode]");
+for(var i4=0;i4<mb.length;i4++){
+  mb[i4].onclick=function(){MODE=this.getAttribute("data-mode");refreshMode();doGen(1);};
+}
+$("len").oninput=function(){$("lenVal").textContent=this.value;};
+$("wc").oninput=function(){$("wcVal").textContent=this.value;refreshMode();};
+$("sep").onchange=refreshMode;$("xf").onchange=refreshMode;$("oNum2").onchange=refreshMode;
+$("gen1").onclick=function(){doGen(1);};
+$("gen10").onclick=function(){doGen(10);};
+$("copyAll").onclick=function(){
+  if(!GENERATED.length){toast("Generate first");return;}
+  copy(GENERATED.join("\n"),GENERATED.length+" passwords");
+};
+$("useFirst").onclick=function(){
+  if(!GENERATED.length){toast("Generate first");return;}
+  $("audit").value=GENERATED[0];
+  $("audit").type="text";
+  $("showAudit").textContent="Hide";
+  renderAudit();
+};
+$("audit").oninput=renderAudit;
+$("showAudit").onclick=function(){
+  if($("audit").type==="password"||$("audit").type==="text"){
+    $("audit").type=($("audit").type==="text")?"password":"text";
+    this.textContent=$("audit").type==="text"?"Hide":"Show";
+  }
+};
+$("runBatch").onclick=runBatch;
+$("reveal").onchange=renderBatch;
+$("clearBatch").onclick=function(){$("batch").value="";BATCHROWS=[];renderBatch();toast("Cleared");};
+$("copyBatch").onclick=function(){
+  if(!BATCHROWS.length){toast("Run the audit first");return;}
+  var rows=["#\tLength\tEntropy\tRating\tCrack time (assumed)\tTop finding"];
+  for(var i=0;i<BATCHROWS.length;i++){
+    var a=BATCHROWS[i];
+    rows.push([i+1,a.len,a.entropy.toFixed(1),a.rating,a.crack,(a.issues.length?a.issues[0][1]:"—")].join("\t"));
+  }
+  copy(rows.join("\n"),"Table");
+};
+
+$("audit").type="password";
+refreshMode();
+doGen(1);
+renderAudit();
+renderBatch();
+})();
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">PassForge is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/passforge" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get PassForge — $15</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
