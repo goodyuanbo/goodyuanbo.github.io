@@ -1094,7 +1094,48 @@ $("curlIn").value=EXAMPLE;
 runParse();
 $("revOut").textContent="Converted cURL shows up here.";
 </script>
-
+<script id="yb-i18n" data-note="i18n by Yuanbo">
+(function(){
+if(window.__ybI18N)return;window.__ybI18N=1;
+var D={"zh":{"cURL to code, and back. Locally.":"cURL 与代码互转，全程本地。","100% offline":"100% 离线","no upload":"不上传","Dark":"深色","cURL command":"cURL 命令","Parse →":"解析 →","Load example":"加载示例","Sanitize secrets":"脱敏敏感信息","Clear":"清空","Parsed request":"解析出的请求","Method":"方法","Headers":"请求头","Body":"正文","URL":"网址","Generated code":"生成的代码","Copy code":"复制代码","Download file":"下载文件","Reverse — code back to cURL":"反向 —— 代码转回 cURL","Converted cURL shows up here.":"转换出的 cURL 会显示在这里。","Copy cURL":"复制 cURL","Send to top editor":"发送到顶部编辑器","Everything runs in your browser. Nothing is uploaded.":"一切都在你的浏览器中运行，任何数据都不会上传。","Local-first · one-time purchase · no account":"本地优先 · 一次买断 · 无需账号","Paste Python requests(...) or JavaScript fetch(...) here":"在这里粘贴 Python requests(...) 或 JavaScript fetch(...) 代码"},"ja":{"cURL to code, and back. Locally.":"cURL とコードを双方向変換。完全ローカル。","100% offline":"100% オフライン","no upload":"アップロードなし","Dark":"ダーク","cURL command":"cURL コマンド","Parse →":"解析 →","Load example":"サンプルを読み込む","Sanitize secrets":"機密情報をマスク","Clear":"クリア","Parsed request":"解析されたリクエスト","Method":"メソッド","Headers":"ヘッダー","Body":"本文","URL":"URL","Generated code":"生成コード","Copy code":"コードをコピー","Download file":"ファイルをダウンロード","Reverse — code back to cURL":"逆変換 — コードから cURL","Converted cURL shows up here.":"変換された cURL がここに表示されます。","Copy cURL":"cURL をコピー","Send to top editor":"上部エディタへ送る","Everything runs in your browser. Nothing is uploaded.":"すべてブラウザ内で動作します。データは一切アップロードされません。","Local-first · one-time purchase · no account":"ローカル優先 · 一括購入 · アカウント不要","Paste Python requests(...) or JavaScript fetch(...) here":"Python requests(...) か JavaScript fetch(...) をここに貼り付け"},"ko":{"cURL to code, and back. Locally.":"cURL과 코드를 상호 변환, 완전 로컬.","100% offline":"100% 오프라인","no upload":"업로드 없음","Dark":"다크","cURL command":"cURL 명령","Parse →":"분석 →","Load example":"예시 불러오기","Sanitize secrets":"시크릿 마스킹","Clear":"지우기","Parsed request":"분석된 요청","Method":"메서드","Headers":"헤더","Body":"본문","URL":"URL","Generated code":"생성된 코드","Copy code":"코드 복사","Download file":"파일 다운로드","Reverse — code back to cURL":"역방향 — 코드에서 cURL로","Converted cURL shows up here.":"변환된 cURL이 여기에 표시됩니다.","Copy cURL":"cURL 복사","Send to top editor":"상단 편집기로 보내기","Everything runs in your browser. Nothing is uploaded.":"모든 작업은 브라우저에서 실행되며, 어떤 데이터도 업로드되지 않습니다.","Local-first · one-time purchase · no account":"로컬 우선 · 일회성 구매 · 계정 불필요","Paste Python requests(...) or JavaScript fetch(...) here":"Python requests(...) 또는 JavaScript fetch(...)를 여기에 붙여넣기"},"es":{"cURL to code, and back. Locally.":"De cURL a código, y de vuelta. En local.","100% offline":"100% sin conexión","no upload":"sin subidas","Dark":"Oscuro","cURL command":"Comando cURL","Parse →":"Analizar →","Load example":"Cargar ejemplo","Sanitize secrets":"Sanitizar secretos","Clear":"Limpiar","Parsed request":"Petición analizada","Method":"Método","Headers":"Cabeceras","Body":"Cuerpo","URL":"URL","Generated code":"Código generado","Copy code":"Copiar código","Download file":"Descargar archivo","Reverse — code back to cURL":"Inverso — de código a cURL","Converted cURL shows up here.":"El cURL convertido aparecerá aquí.","Copy cURL":"Copiar cURL","Send to top editor":"Enviar al editor superior","Everything runs in your browser. Nothing is uploaded.":"Todo se ejecuta en tu navegador. Nada se sube a ningún servidor.","Local-first · one-time purchase · no account":"Local primero · pago único · sin cuenta","Paste Python requests(...) or JavaScript fetch(...) here":"Pega aquí Python requests(...) o JavaScript fetch(...)"}};
+var LANGS=[["en","EN"],["zh","中文"],["ja","日本語"],["ko","한국어"],["es","Español"]];
+function cur(){try{return localStorage.getItem("yb_i18n_lang")||"en"}catch(e){return "en"}}
+function norm(s){return s.replace(/\s+/g," ").trim().replace(/\u00a0/g," ")}
+function find(m,k){if(!k)return null;if(m[k])return m[k];if(k.slice(-1)===":"&&m[k.slice(0,-1)])return m[k.slice(0,-1)]+":";return null}
+function apply(){
+var lang=cur();var m=D[lang];if(!m)return;
+try{document.documentElement.lang=lang==="zh"?"zh-CN":(lang==="en"?"en":lang)}catch(e){}
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
+while(n=w.nextNode()){
+var raw=n.nodeValue;if(!raw)continue;var k=norm(raw);if(k.length<2)continue;
+var t=find(m,k);if(!t)continue;
+n.nodeValue=(raw.match(/^\s*/)||[""])[0]+t+(raw.match(/\s*$/)||[""])[0];
+}
+var els=document.querySelectorAll("[placeholder],[title],[aria-label]");
+for(var i=0;i<els.length;i++){var el=els[i];
+["placeholder","title","aria-label"].forEach(function(a){
+var v=el.getAttribute&&el.getAttribute(a);if(!v)return;var t=find(m,norm(v));if(t)el.setAttribute(a,t);
+});
+}
+try{var t2=find(m,norm(document.title||""));if(t2)document.title=t2}catch(e){}
+}
+function mkUI(){
+if(document.getElementById("yb-i18n-box"))return;
+var box=document.createElement("div");box.id="yb-i18n-box";
+var sel=document.createElement("select");sel.id="yb-i18n-sel";sel.setAttribute("aria-label","Language");
+LANGS.forEach(function(l){var o=document.createElement("option");o.value=l[0];o.textContent=l[1];sel.appendChild(o);});
+sel.value=cur();
+sel.addEventListener("change",function(){try{localStorage.setItem("yb_i18n_lang",sel.value)}catch(e){}apply();});
+box.appendChild(sel);document.body.appendChild(box);
+var st=document.createElement("style");st.textContent="#yb-i18n-box{position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,28,51,.92);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:2px 4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}#yb-i18n-box select{background:transparent;color:#eaf1fb;border:0;outline:0;font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;padding:4px 8px;cursor:pointer;appearance:auto}#yb-i18n-box select option{color:#111;background:#fff}";
+document.head.appendChild(st);
+}
+function boot(){mkUI();apply();
+var tm;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(apply,120);}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+})();
+</script>
 <div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
   <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">ReqForge is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
