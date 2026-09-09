@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CronWhisper — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+
+/* ---- CronWhisper extras ---- */
+.exprbox{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input.expr{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:18px;font-weight:650;
+  letter-spacing:.4px;padding:9px 12px}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.presets button{font-size:12px;padding:5px 10px}
+.say{font-size:17px;font-weight:600;line-height:1.5;letter-spacing:-.2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;font-size:12px;padding:6px 12px}
+.seg button.on{background:var(--accent);color:#fff}
+.cf{border-top:1px solid var(--line);padding:13px 0}
+.cf:first-child{border-top:0;padding-top:0}
+.cf:last-child{padding-bottom:0}
+.cf-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+.cf-name{font-size:12.5px;font-weight:650;min-width:78px}
+.cf-range{font-size:11px;color:var(--muted)}
+input.cf-raw{width:130px;font-size:12px;padding:4px 8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.quick{display:flex;gap:5px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}
+.chip{font:inherit;font-size:11px;line-height:1.4;padding:3px 5px;min-width:31px;
+  border-radius:6px;cursor:pointer;border:1px solid var(--line);background:var(--bg);
+  color:var(--muted);transition:.1s}
+.chip:hover{border-color:var(--muted);color:var(--ink)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chip.wide{min-width:44px}
+.runrow{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.runrel{font-size:12px;color:var(--muted)}
+.runabs{font-size:13px;font-weight:600}
+.err{font-size:13px;color:var(--bad);margin-top:10px}
+.okline{font-size:12.5px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of CronWhisper. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/cronwhisper" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get CronWhisper — $15</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>CronWhisper</h1>
+  <span class="tag">See what your cron actually means</span>
+  <span class="tag">100% offline</span>
+  <span class="tag">no upload</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="panel">
+  <h3>Expression</h3>
+  <div class="exprbox">
+    <input id="expr" class="expr" type="text" spellcheck="false" value="*/15 9-17 * * 1-5">
+    <span class="spacer"></span>
+    <span class="seg" id="modeSeg">
+      <button id="m5" class="on">5 fields</button>
+      <button id="m6">6 fields (sec)</button>
+    </span>
+  </div>
+  <div class="presets" id="presets"></div>
+  <div id="err" class="err"></div>
+  <div id="okline" class="okline"></div>
+</div>
+
+<div class="panel">
+  <h3>Plain English</h3>
+  <div id="say" class="say">—</div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>Next 5 run times</h3>
+    <div id="tz" class="hint"></div>
+    <table>
+      <thead><tr><th style="width:34px">#</th><th>When</th><th class="num">In</th></tr></thead>
+      <tbody id="runs"></tbody>
+    </table>
+    <div class="bar">
+      <button class="mini" id="copyRuns">Copy list</button>
+      <button class="mini" id="refresh">Recalculate now</button>
+      <span class="stat" id="runNote"></span>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Field breakdown</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Value</th><th class="num">Matches</th></tr></thead>
+      <tbody id="brk"></tbody>
+    </table>
+    <div class="hint" style="margin-top:10px">
+      If day-of-month and day-of-week are both restricted, cron treats them as <b>OR</b> —
+      the job runs when either one matches.
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Visual editor — click to toggle, changes write back to the expression</h3>
+  <div id="editor"></div>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* ============ cron engine ============ */
+var MONTH_N=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+var DOW_N=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var DOW_S=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function pad2(n){return n<10?"0"+n:""+n;}
+
+/* Parse one cron field into a sorted array of ints. Returns {set, err} */
+function parseField(spec,min,max,names,allowQ){
+  var raw=String(spec==null?"":spec).trim(),set={},i,err="";
+  if(raw==="")return{set:[],err:"is empty"};
+  if(allowQ&&(raw==="?"||raw==="L"))raw="*";
+  var parts=raw.split(",");
+  for(i=0;i<parts.length;i++){
+    var p=parts[i].trim();
+    if(p===""){err="has an empty list item";continue;}
+    var step=1,m=p.match(/^(.+?)\/(\d+)$/);
+    if(m){p=m[1];step=parseInt(m[2],10);}
+    if(!(step>=1)){err="has an invalid step (/"+m[2]+")";continue;}
+    var lo,hi;
+    if(p==="*"||p==="?"||p==="L"){lo=min;hi=max;}
+    else{
+      var rng=p.split("-");
+      if(rng.length>2){err="has a bad range '"+p+"'";continue;}
+      var a=toVal(rng[0],min,max,names);
+      if(a===null){err=badVal(rng[0],min,max);continue;}
+      lo=a;
+      if(rng.length===2){
+        var b=toVal(rng[1],min,max,names);
+        if(b===null){err=badVal(rng[1],min,max);continue;}
+        hi=b;
+        if(b<a){err="has a backwards range '"+p+"'";continue;}
+      } else if(m){hi=max;} else {hi=a;}
+    }
+    if(lo<min||hi>max){err="is out of range ("+min+"-"+max+")";continue;}
+    for(var v=lo;v<=hi;v+=step)set[v]=1;
+  }
+  var out=[];for(i=min;i<=max;i++)if(set[i])out.push(i);
+  if(out.length===0&&!err)err="matches nothing";
+  return{set:out,err:err};
+}
+function badVal(s,min,max){
+  s=String(s).trim();
+  if(/^\d+$/.test(s))return "value "+s+" is out of range (allowed "+min+"–"+max+")";
+  return "has an unrecognised value '"+s+"'";
+}
+function toVal(s,min,max,names){
+  s=String(s).trim().toUpperCase();
+  if(/^\d+$/.test(s)){var n=parseInt(s,10);
+    if(names===DOW_N&&n===7)n=0;
+    if(n<min||n>max)return null;
+    return n;}
+  if(names){
+    for(var i=0;i<names.length;i++){
+      var nm=names[i].toUpperCase();
+      if(s===nm||s===nm.slice(0,3))return i+min;
+    }
+  }
+  return null;
+}
+
+/* Full expression -> model. six=true means Quartz style: sec min hour dom mon dow */
+function parseCron(str,six){
+  var toks=String(str||"").trim().split(/\s+/).filter(function(x){return x!=="";});
+  var res={ok:false,errs:[],six:!!six,fields:{},stars:{}};
+  if(toks.length===0){res.errs.push("Expression is empty.");return res;}
+  var want=six?6:5;
+  if(toks.length!==want){
+    res.errs.push("Expected "+want+" fields, found "+toks.length+
+      " — "+(toks.length<want?"add a field":"too many fields")+
+      " ("+(six?"second minute hour day-of-month month day-of-week":
+        "minute hour day-of-month month day-of-week")+").");
+    return res;
+  }
+  var defs=six
+    ? [["sec",0,59,null],["min",0,59,null],["hour",0,23,null],["dom",1,31,null],["mon",1,12,MONTH_N],["dow",0,6,DOW_N]]
+    : [["min",0,59,null],["hour",0,23,null],["dom",1,31,null],["mon",1,12,MONTH_N],["dow",0,6,DOW_N]];
+  var labels=six
+    ? {sec:"second",min:"minute",hour:"hour",dom:"day-of-month",mon:"month",dow:"day-of-week"}
+    : {min:"minute",hour:"hour",dom:"day-of-month",mon:"month",dow:"day-of-week"};
+  var bad=false;
+  for(var i=0;i<defs.length;i++){
+    var d=defs[i],f=parseField(toks[i],d[1],d[2],d[3],d[0]==="dom"||d[0]==="dow");
+    res.fields[d[0]]=f.set;
+    res.stars[d[0]]=(toks[i]==="*"||toks[i]==="?");
+    if(f.err){res.errs.push("Field "+(i+1)+" ("+labels[d[0]]+", got \""+toks[i]+"\") "+f.err+".");bad=true;}
+  }
+  res.toks=toks;
+  res.ok=!bad;
+  return res;
+}
+
+function dayMatches(y,mo,da,f,domStar,dowStar){
+  if(f.mon.indexOf(mo+1)<0)return false;
+  var a=f.dom.indexOf(da)>=0,b=f.dow.indexOf(new Date(y,mo,da).getDay())>=0;
+  if(domStar&&dowStar)return true;
+  if(domStar)return b;
+  if(dowStar)return a;
+  return a||b;
+}
+
+/* Next n matching instants strictly after `from` (a Date). Local timezone. */
+function nextRuns(f,stars,n,from,six){
+  var out=[],base=new Date(from.getTime());
+  var y=base.getFullYear(),mo=base.getMonth(),da=base.getDate();
+  var domStar=!!stars.dom,dowStar=!!stars.dow;
+  var secs=six?f.sec:[0];
+  var LIMIT=2000; /* days */
+  for(var di=0;di<LIMIT&&out.length<n;di++){
+    var d=new Date(y,mo,da+di);
+    if(!dayMatches(d.getFullYear(),d.getMonth(),d.getDate(),f,domStar,dowStar))continue;
+    for(var hi=0;hi<f.hour.length&&out.length<n;hi++){
+      for(var mi=0;mi<f.min.length&&out.length<n;mi++){
+        for(var si=0;si<secs.length&&out.length<n;si++){
+          var c=new Date(d.getFullYear(),d.getMonth(),d.getDate(),f.hour[hi],f.min[mi],secs[si],0);
+          if(c.getTime()<=base.getTime())continue;
+          out.push(c);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function relTime(from,to){
+  var s=Math.max(0,Math.floor((to.getTime()-from.getTime())/1000));
+  var d=Math.floor(s/86400);s-=d*86400;
+  var h=Math.floor(s/3600);s-=h*3600;
+  var m=Math.floor(s/60);s-=m*60;
+  if(d>0)return "in "+d+"d "+h+"h";
+  if(h>0)return "in "+h+"h "+pad2(m)+"m";
+  if(m>0)return "in "+m+"m "+pad2(s)+"s";
+  return "in "+s+"s";
+}
+
+/* ============ plain-English translation ============ */
+function isContig(a){for(var i=1;i<a.length;i++)if(a[i]!==a[i-1]+1)return false;return true;}
+function stepOf(a,total){
+  if(a.length<2||a[0]!==0)return 0;
+  var s=a[1]-a[0];
+  if(s<1||total%s!==0)return 0;
+  for(var i=0;i<a.length;i++)if(a[i]!==i*s)return 0;
+  if(a.length*s!==total)return 0;
+  return s;
+}
+function listNames(a,fn,glue){
+  var s=a.map(fn);
+  if(s.length===1)return s[0];
+  if(s.length===2)return s[0]+" "+glue+" "+s[1];
+  return s.slice(0,-1).join(", ")+" "+glue+" "+s[s.length-1];
+}
+function clock(h,m){return pad2(h)+":"+pad2(m);}
+
+function timePhrase(min,hour){
+  var allMin=min.length===60,allHour=hour.length===24;
+  var sm=stepOf(min,60),sh=stepOf(hour,24);
+  var h0=hour[0],hN=hour[hour.length-1];
+  if(allMin&&allHour)return "Every minute";
+  if(allHour){
+    if(sm)return "Every "+sm+" minutes";
+    if(min.length===1)return "Every hour at :"+pad2(min[0]);
+    return "Every hour at minutes "+min.join(", ");
+  }
+  if(allMin){
+    if(sh)return "Every minute of every "+sh+" hours";
+    return "Every minute, from "+clock(h0,0)+" through "+clock(hN,59);
+  }
+  var contigH=isContig(hour);
+  if(sm&&contigH&&hour.length>1)
+    return "Every "+sm+" minutes, from "+clock(h0,0)+" through "+clock(hN,59);
+  if(min.length===1&&hour.length===1){
+    var t=clock(h0,min[0]);
+    if(h0===0&&min[0]===0)t+=" (midnight)";
+    else if(h0===12&&min[0]===0)t+=" (noon)";
+    return "At "+t;
+  }
+  if(min.length===1&&contigH&&hour.length>1)
+    return "At :"+pad2(min[0])+" every hour, from "+clock(h0,0)+" through "+clock(hN,59);
+  if(min.length===1)
+    return "At :"+pad2(min[0])+" past hours "+hour.join(", ");
+  if(hour.length===1)
+    return "At minutes "+min.join(", ")+" past hour "+pad2(h0);
+  return "At minutes "+min.join(", ")+" past hours "+hour.join(", ");
+}
+function dayPhrase(f,domStar,dowStar){
+  if(domStar&&dowStar){
+    if(f.min.length===60||stepOf(f.min,60))return "";
+    return "every day";
+  }
+  var d="";
+  if(!domStar){
+    if(f.dom.length===1)d="on day "+f.dom[0]+" of the month";
+    else if(isContig(f.dom)&&f.dom.length>2)
+      d="on days "+f.dom[0]+" through "+f.dom[f.dom.length-1]+" of the month";
+    else d="on days "+listNames(f.dom,function(x){return ""+x;},"and")+" of the month";
+  }
+  if(!dowStar){
+    var rng=isContig(f.dow)&&f.dow.length>2;
+    var w=rng?DOW_N[f.dow[0]]+" through "+DOW_N[f.dow[f.dow.length-1]]
+      : listNames(f.dow,function(x){return DOW_N[x];},"and");
+    d=d?d+" or on "+w:(rng?w:"on "+w);
+  }
+  return d;
+}
+function mName(x){var n=MONTH_N[x-1];return n[0]+n.slice(1).toLowerCase();}
+function monthPhrase(f){
+  if(f.mon.length===12)return "";
+  if(isContig(f.mon)&&f.mon.length>2)
+    return "in "+mName(f.mon[0])+" through "+mName(f.mon[f.mon.length-1]);
+  return "in "+listNames(f.mon,mName,"and");
+}
+function describe(m,six){
+  var t=timePhrase(m.fields.min,m.fields.hour);
+  var bits=[t];
+  if(six&&m.fields.sec.length<60){
+    bits.push(m.fields.sec.length===1
+      ? "at second "+m.fields.sec[0]
+      : "at seconds "+m.fields.sec.join(", "));
+  }
+  bits.push(dayPhrase(m.fields,m.stars.dom,m.stars.dow));
+  var mp=monthPhrase(m.fields);
+  if(mp)bits.push(mp);
+  var clean=[];
+  for(var i=0;i<bits.length;i++)if(bits[i])clean.push(bits[i]);
+  var s=clean.join(", ")+".";
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+/* ============ visual editor ============ */
+var FIELDS=[
+  {k:"sec", name:"Second",       range:"0 – 59",            min:0,max:59, quick:[["*","Every sec"],["*/5","Every 5s"],["*/10","Every 10s"],["*/15","Every 15s"],["*/30","Every 30s"]]},
+  {k:"min", name:"Minute",       range:"0 – 59",            min:0,max:59, quick:[["*","Every minute"],["*/5","Every 5"],["*/10","Every 10"],["*/15","Every 15"],["*/30","Every 30"]]},
+  {k:"hour",name:"Hour",         range:"0 – 23",            min:0,max:23, quick:[["*","Every hour"],["*/2","Every 2h"],["*/3","Every 3h"],["*/4","Every 4h"],["*/6","Every 6h"],["*/12","Every 12h"]]},
+  {k:"dom", name:"Day of month", range:"1 – 31",            min:1,max:31, quick:[["*","Every day"],["*/2","Every 2d"],["*/3","Every 3d"],["*/7","Every 7d"]]},
+  {k:"mon", name:"Month",        range:"1 – 12 · JAN–DEC",  min:1,max:12, quick:[["*","Every month"],["*/2","Every 2m"],["*/3","Quarterly"],["*/6","Every 6m"]], wide:true, names:MONTH_N},
+  {k:"dow", name:"Day of week",  range:"0 – 6 · SUN–SAT",   min:0,max:6,  quick:[["*","Every day"],["1-5","Weekdays"],["0,6","Weekend"]], wide:true, names:DOW_S}
+];
+var SIX=false, FOCUS=null;
+
+function tokIndex(k){
+  var order= SIX?["sec","min","hour","dom","mon","dow"]:["min","hour","dom","mon","dow"];
+  return order.indexOf(k);
+}
+function chipLabel(f,v){
+  if(f.k==="mon")return f.names[v-1][0]+f.names[v-1].slice(1,3).toLowerCase();
+  if(f.k==="dow")return f.names[v];
+  return String(v);
+}
+function setToSeg(arr,min,max){
+  if(!arr.length)return "*";
+  var total=max-min+1;
+  if(arr.length===total)return "*";
+  var step=arr[1]-arr[0];
+  if(step>0&&arr[0]===min&&total%step===0&&arr.length*step===total){
+    var ok=true;
+    for(var i=0;i<arr.length;i++)if(arr[i]!==min+i*step){ok=false;break;}
+    if(ok)return "*/"+step;
+  }
+  if(arr.length>2){
+    var cont=true;
+    for(var j=1;j<arr.length;j++)if(arr[j]!==arr[j-1]+1){cont=false;break;}
+    if(cont)return arr[0]+"-"+arr[arr.length-1];
+  }
+  return arr.join(",");
+}
+function setToken(k,seg){
+  var toks=$("expr").value.trim().split(/\s+/).filter(function(x){return x!=="";});
+  var order= SIX?["sec","min","hour","dom","mon","dow"]:["min","hour","dom","mon","dow"];
+  while(toks.length<order.length)toks.push("*");
+  if(toks.length>order.length)toks=toks.slice(0,order.length);
+  var i=order.indexOf(k);
+  if(i<0)return;
+  toks[i]=seg;
+  $("expr").value=toks.join(" ");
+  update();
+}
+
+function renderEditor(m){
+  var html="",vis=0;
+  for(var i=0;i<FIELDS.length;i++){
+    var f=FIELDS[i];
+    if(f.k==="sec"&&!SIX)continue;
+    var idx=tokIndex(f.k);
+    var raw=(m.toks&&m.toks[idx]!==undefined)?m.toks[idx]:"*";
+    var set=m.ok?m.fields[f.k]:[];
+    var q="";
+    for(var a=0;a<f.quick.length;a++){
+      q+='<button class="mini'+(raw===f.quick[a][0]?" primary":"")+
+        '" data-q="'+f.k+'" data-v="'+esc(f.quick[a][0])+'">'+esc(f.quick[a][1])+'</button>';
+    }
+    var c="";
+    for(var v=f.min;v<=f.max;v++){
+      c+='<button class="chip'+(f.wide?" wide":"")+(set.indexOf(v)>=0?" on":"")+
+        '" data-c="'+f.k+'" data-v="'+v+'">'+esc(chipLabel(f,v))+'</button>';
+    }
+    html+='<div class="cf"><div class="cf-head">'+
+      '<span class="cf-name">'+esc(f.name)+'</span>'+
+      '<span class="cf-range">'+esc(f.range)+'</span>'+
+      '<input class="cf-raw mono" type="text" spellcheck="false" data-k="'+f.k+'" value="'+esc(raw)+'">'+
+      '</div><div class="quick">'+q+'</div><div class="chips">'+c+'</div></div>';
+    vis++;
+  }
+  $("editor").innerHTML=html;
+  if(FOCUS){
+    var el=$("editor").querySelector('input[data-k="'+FOCUS.k+'"]');
+    if(el){el.focus();var p=Math.min(FOCUS.p===undefined?el.value.length:FOCUS.p,el.value.length);
+      try{el.setSelectionRange(p,p);}catch(e){}}
+  }
+}
+
+/* ============ render ============ */
+var MONS3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var DOW3=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function fmtAbs(d){
+  var t=DOW3[d.getDay()]+" "+d.getDate()+" "+MONS3[d.getMonth()]+" "+d.getFullYear()+
+    ", "+clock(d.getHours(),d.getMinutes());
+  if(SIX)t+=":"+pad2(d.getSeconds());
+  return t;
+}
+function tzLabel(){
+  var z="";
+  try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||"";}catch(e){}
+  var off=-new Date().getTimezoneOffset();
+  var s=(off>=0?"UTC+":"UTC-")+Math.floor(Math.abs(off)/60)+":"+pad2(Math.abs(off)%60);
+  return "Your local time"+(z?" · "+z:"")+" · "+s;
+}
+var LAST_RUNS=[];
+
+function update(){
+  var m=parseCron($("expr").value,SIX);
+  var errEl=$("err"),okEl=$("okline");
+  if(m.errs.length){
+    errEl.textContent=m.errs.join(" ");
+    errEl.style.display="block";
+  } else {errEl.textContent="";errEl.style.display="none";}
+  renderEditor(m);
+  if(!m.ok){
+    $("say").textContent="Fix the expression to see the translation.";
+    $("say").className="say bad";
+    $("runs").innerHTML='<tr><td colspan="3" class="hint">Waiting for a valid expression…</td></tr>';
+    $("brk").innerHTML="";
+    okEl.textContent="";
+    LAST_RUNS=[];
+    return;
+  }
+  $("say").textContent=describe(m,SIX);
+  $("say").className="say";
+  okEl.textContent="Valid "+(SIX?"6-field (Quartz)":"5-field")+" expression · "+
+    m.fields.min.length+" minute slot"+(m.fields.min.length===1?"":"s")+", "+
+    m.fields.hour.length+" hour slot"+(m.fields.hour.length===1?"":"s")+" per matching day.";
+
+  var now=new Date();
+  var runs=nextRuns(m.fields,m.stars,5,now,SIX);
+  LAST_RUNS=runs;
+  var tr="";
+  if(!runs.length){
+    tr='<tr><td colspan="3" class="hint">No matching run time found in the next ~5 years.</td></tr>';
+  } else {
+    for(var i=0;i<runs.length;i++){
+      tr+='<tr><td class="hint">'+(i+1)+'</td>'+
+        '<td><div class="runrow"><span class="runabs">'+esc(fmtAbs(runs[i]))+'</span>'+
+        '<span class="runrel">'+esc(DOW3[runs[i].getDay()])+'</span></div></td>'+
+        '<td class="num runrel">'+esc(relTime(now,runs[i]))+'</td></tr>';
+    }
+  }
+  $("runs").innerHTML=tr;
+  $("runNote").textContent=runs.length?("Next run "+relTime(now,runs[0]).replace("in ","in ")):"";
+
+  var order=SIX?["sec","min","hour","dom","mon","dow"]:["min","hour","dom","mon","dow"];
+  var lab={sec:"second",min:"minute",hour:"hour",dom:"day-of-month",mon:"month",dow:"day-of-week"};
+  var br="";
+  for(var k=0;k<order.length;k++){
+    var key=order[k],set=m.fields[key],n=set.length;
+    var pick=n<=10?set.slice(0,10).join(", "):set.slice(0,6).join(", ")+", …";
+    br+='<tr><td>'+esc(lab[key])+'</td><td class="mono">'+esc(m.toks[k])+'</td>'+
+      '<td class="num">'+n+' <span class="hint">'+esc(pick)+'</span></td></tr>';
+  }
+  $("brk").innerHTML=br;
+}
+
+/* ============ wiring ============ */
+var PRESETS=[
+  ["Every 5 minutes","*/5 * * * *"],
+  ["Every hour","0 * * * *"],
+  ["Every day at midnight","0 0 * * *"],
+  ["Weekdays at 9:00","0 9 * * 1-5"],
+  ["Every Monday at 9:00","0 9 * * 1"],
+  ["1st of the month","0 0 1 * *"],
+  ["Every 15 min, 9–17, Mon–Fri","*/15 9-17 * * 1-5"],
+  ["Every minute","* * * * *"]
+];
+function renderPresets(){
+  var h="";
+  for(var i=0;i<PRESETS.length;i++)
+    h+='<button data-p="'+esc(PRESETS[i][1])+'">'+esc(PRESETS[i][0])+'</button>';
+  $("presets").innerHTML=h;
+}
+$("presets").onclick=function(e){
+  var b=e.target.closest?e.target.closest("button[data-p]"):null;
+  if(!b)return;
+  $("expr").value=b.getAttribute("data-p");
+  SIX=false;syncMode();
+  update();toast("Preset loaded");
+};
+function syncMode(){
+  $("m5").className=SIX?"":"on";
+  $("m6").className=SIX?"on":"";
+}
+function setMode(v){
+  if(v===SIX)return;
+  var toks=$("expr").value.trim().split(/\s+/).filter(function(x){return x!=="";});
+  if(v){ if(toks.length===5)toks.unshift("0"); }
+  else { if(toks.length===6)toks.shift(); }
+  SIX=v;syncMode();
+  $("expr").value=toks.join(" ");
+  update();
+}
+$("m5").onclick=function(){setMode(false);};
+$("m6").onclick=function(){setMode(true);};
+
+$("expr").addEventListener("input",function(){update();});
+$("refresh").onclick=function(){update();toast("Recalculated");};
+$("copyRuns").onclick=function(){
+  if(!LAST_RUNS.length){toast("No run times yet");return;}
+  var s="";
+  for(var i=0;i<LAST_RUNS.length;i++)s+=(i+1)+". "+fmtAbs(LAST_RUNS[i])+"\n";
+  copy(s,"Run times");
+};
+
+$("editor").addEventListener("click",function(e){
+  var t=e.target;
+  if(!t||!t.getAttribute)return;
+  var q=t.getAttribute("data-q"),c=t.getAttribute("data-c");
+  if(q){
+    setToken(q,t.getAttribute("data-v"));
+    return;
+  }
+  if(c){
+    var v=parseInt(t.getAttribute("data-v"),10);
+    var f=null;
+    for(var i=0;i<FIELDS.length;i++)if(FIELDS[i].k===c)f=FIELDS[i];
+    if(!f)return;
+    var m=parseCron($("expr").value,SIX);
+    var set=m.ok?m.fields[c].slice():[];
+    var at=set.indexOf(v);
+    if(at>=0)set.splice(at,1);
+    else{
+      set.push(v);
+      set.sort(function(a,b){return a-b;});
+    }
+    if(set.length===0)set=[v];
+    FOCUS=null;
+    setToken(c,setToSeg(set,f.min,f.max));
+  }
+});
+$("editor").addEventListener("input",function(e){
+  var t=e.target;
+  if(!t||!t.getAttribute)return;
+  var k=t.getAttribute("data-k");
+  if(!k)return;
+  FOCUS={k:k,p:t.selectionStart};
+  var seg=t.value.trim();
+  if(seg==="")seg="*";
+  setToken(k,seg);
+});
+
+renderPresets();
+syncMode();
+$("tz").textContent=tzLabel();
+update();
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">CronWhisper is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/cronwhisper" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get CronWhisper — $15</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
