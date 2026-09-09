@@ -819,7 +819,48 @@ renderAudit();
 renderBatch();
 })();
 </script>
-
+<script id="yb-i18n" data-note="i18n by Yuanbo">
+(function(){
+if(window.__ybI18N)return;window.__ybI18N=1;
+var D={"zh":{"Offline password generator & strength audit":"离线密码生成与强度审计","100% offline":"100% 离线","Dark":"深色","Works with the network unplugged. Your passwords never leave this device.":"拔掉网线也能用。你的密码永远不会离开这台设备。","1 · Generate":"1 · 生成","Random password":"随机密码","Passphrase":"口令短语","Exclude these symbols (optional)":"排除这些符号（可选）","Separator":"分隔符","hyphen -":"连字符 -","space":"空格","dot .":"点 .","underscore _":"下划线 _","colon :":"冒号 :","none":"无","Transform":"变换","lowercase":"全部小写","Title Case":"标题大小写","UPPERCASE":"全部大写","Generate":"生成","Generate 10":"生成 10 个","Copy all":"全部复制","Audit the first one →":"审计第一个 →","2 · Strength audit":"2 · 强度审计","look-alike":"形近字符","Show":"显示","10 billion guesses per second":"每秒 100 亿次猜测","illustrative assumption, not a promise":"示意性假设，并非承诺","3 · Batch audit":"3 · 批量审计","Do not paste your real passwords here.":"不要在这里粘贴你的真实密码。","shape":"形态","Audit all":"全部审计","Copy table (TSV)":"复制表格（TSV）","Clear":"清空","Everything runs in your browser. Nothing is uploaded.":"一切都在你的浏览器中运行，任何数据都不会上传。","Local-first · one-time purchase · no account":"本地优先 · 一次买断 · 无需账号","paste or type here":"在此粘贴或输入"},"ja":{"Offline password generator & strength audit":"オフラインのパスワード生成と強度監査","100% offline":"100% オフライン","Dark":"ダーク","Works with the network unplugged. Your passwords never leave this device.":"ネットワークを切っても動作します。パスワードがこの端末から出ることはありません。","1 · Generate":"1 · 生成","Random password":"ランダムパスワード","Passphrase":"パスフレーズ","Exclude these symbols (optional)":"除外する記号（任意）","Separator":"区切り文字","hyphen -":"ハイフン -","space":"スペース","dot .":"ドット .","underscore _":"アンダースコア _","colon :":"コロン :","none":"なし","Transform":"変換","lowercase":"小文字","Title Case":"タイトルケース","UPPERCASE":"大文字","Generate":"生成","Generate 10":"10 個生成","Copy all":"すべてコピー","Audit the first one →":"最初の 1 つを監査 →","2 · Strength audit":"2 · 強度監査","look-alike":"紛らわしい文字","Show":"表示","10 billion guesses per second":"毎秒 100 億回の推測","illustrative assumption, not a promise":"あくまで想定であり保証ではありません","3 · Batch audit":"3 · 一括監査","Do not paste your real passwords here.":"実際のパスワードをここに貼らないでください。","shape":"構造","Audit all":"すべて監査","Copy table (TSV)":"表을 복사（TSV）","Clear":"クリア","Everything runs in your browser. Nothing is uploaded.":"すべてブラウザ内で動作します。データは一切アップロードされません。","Local-first · one-time purchase · no account":"ローカル優先 · 一括購入 · アカウント不要","paste or type here":"ここに貼り付けまたは入力"},"ko":{"Offline password generator & strength audit":"오프라인 비밀번호 생성기 및 강도 감사","100% offline":"100% 오프라인","Dark":"다크","Works with the network unplugged. Your passwords never leave this device.":"네트워크 없이도 작동합니다. 비밀번호는 이 기기를 절대 벗어나지 않습니다.","1 · Generate":"1 · 생성","Random password":"무작위 비밀번호","Passphrase":"패스프레이즈","Exclude these symbols (optional)":"제외할 기호(선택)","Separator":"구분자","hyphen -":"하이픈 -","space":"공백","dot .":"점 .","underscore _":"밑줄 _","colon :":"콜론 :","none":"없음","Transform":"변환","lowercase":"소문자","Title Case":"제목식 대소문자","UPPERCASE":"대문자","Generate":"생성","Generate 10":"10개 생성","Copy all":"모두 복사","Audit the first one →":"첫 번째 감사 →","2 · Strength audit":"2 · 강도 감사","look-alike":"비슷하게 생긴 문자","Show":"표시","10 billion guesses per second":"초당 100억 회 추측","illustrative assumption, not a promise":"예시 가정이지 보장이 아닙니다","3 · Batch audit":"3 · 일괄 감사","Do not paste your real passwords here.":"실제 비밀번호를 여기에 붙여넣지 마세요.","shape":"구조","Audit all":"모두 감사","Copy table (TSV)":"표 복사(TSV)","Clear":"지우기","Everything runs in your browser. Nothing is uploaded.":"모든 작업은 브라우저에서 실행되며, 어떤 데이터도 업로드되지 않습니다.","Local-first · one-time purchase · no account":"로컬 우선 · 일회성 구매 · 계정 불필요","paste or type here":"여기에 붙여넣거나 입력"},"es":{"Offline password generator & strength audit":"Generador de contraseñas y auditoría de fuerza sin conexión","100% offline":"100% sin conexión","Dark":"Oscuro","Works with the network unplugged. Your passwords never leave this device.":"Funciona sin red. Tus contraseñas nunca salen de este dispositivo.","1 · Generate":"1 · Generar","Random password":"Contraseña aleatoria","Passphrase":"Frase de contraseña","Exclude these symbols (optional)":"Excluir estos símbolos (opcional)","Separator":"Separador","hyphen -":"guion -","space":"espacio","dot .":"punto .","underscore _":"guion bajo _","colon :":"dos puntos :","none":"ninguno","Transform":"Transformar","lowercase":"minúsculas","Title Case":"Tipo Título","UPPERCASE":"MAYÚSCULAS","Generate":"Generar","Generate 10":"Generar 10","Copy all":"Copiar todo","Audit the first one →":"Auditar el primero →","2 · Strength audit":"2 · Auditoría de fuerza","look-alike":"parecidos","Show":"Mostrar","10 billion guesses per second":"10.000 millones de intentos por segundo","illustrative assumption, not a promise":"suposición ilustrativa, no una promesa","3 · Batch audit":"3 · Auditoría por lotes","Do not paste your real passwords here.":"No pegues aquí tus contraseñas reales.","shape":"forma","Audit all":"Auditar todo","Copy table (TSV)":"Copiar tabla (TSV)","Clear":"Limpiar","Everything runs in your browser. Nothing is uploaded.":"Todo se ejecuta en tu navegador. Nada se sube a ningún servidor.","Local-first · one-time purchase · no account":"Local primero · pago único · sin cuenta","paste or type here":"pega o escribe aquí"}};
+var LANGS=[["en","EN"],["zh","中文"],["ja","日本語"],["ko","한국어"],["es","Español"]];
+function cur(){try{return localStorage.getItem("yb_i18n_lang")||"en"}catch(e){return "en"}}
+function norm(s){return s.replace(/\s+/g," ").trim().replace(/\u00a0/g," ")}
+function find(m,k){if(!k)return null;if(m[k])return m[k];if(k.slice(-1)===":"&&m[k.slice(0,-1)])return m[k.slice(0,-1)]+":";return null}
+function apply(){
+var lang=cur();var m=D[lang];if(!m)return;
+try{document.documentElement.lang=lang==="zh"?"zh-CN":(lang==="en"?"en":lang)}catch(e){}
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
+while(n=w.nextNode()){
+var raw=n.nodeValue;if(!raw)continue;var k=norm(raw);if(k.length<2)continue;
+var t=find(m,k);if(!t)continue;
+n.nodeValue=(raw.match(/^\s*/)||[""])[0]+t+(raw.match(/\s*$/)||[""])[0];
+}
+var els=document.querySelectorAll("[placeholder],[title],[aria-label]");
+for(var i=0;i<els.length;i++){var el=els[i];
+["placeholder","title","aria-label"].forEach(function(a){
+var v=el.getAttribute&&el.getAttribute(a);if(!v)return;var t=find(m,norm(v));if(t)el.setAttribute(a,t);
+});
+}
+try{var t2=find(m,norm(document.title||""));if(t2)document.title=t2}catch(e){}
+}
+function mkUI(){
+if(document.getElementById("yb-i18n-box"))return;
+var box=document.createElement("div");box.id="yb-i18n-box";
+var sel=document.createElement("select");sel.id="yb-i18n-sel";sel.setAttribute("aria-label","Language");
+LANGS.forEach(function(l){var o=document.createElement("option");o.value=l[0];o.textContent=l[1];sel.appendChild(o);});
+sel.value=cur();
+sel.addEventListener("change",function(){try{localStorage.setItem("yb_i18n_lang",sel.value)}catch(e){}apply();});
+box.appendChild(sel);document.body.appendChild(box);
+var st=document.createElement("style");st.textContent="#yb-i18n-box{position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,28,51,.92);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:2px 4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}#yb-i18n-box select{background:transparent;color:#eaf1fb;border:0;outline:0;font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;padding:4px 8px;cursor:pointer;appearance:auto}#yb-i18n-box select option{color:#111;background:#fff}";
+document.head.appendChild(st);
+}
+function boot(){mkUI();apply();
+var tm;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(apply,120);}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+})();
+</script>
 <div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
   <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">PassForge is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
