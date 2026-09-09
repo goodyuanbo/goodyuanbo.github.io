@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PixelPress — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+#drop{border:2px dashed var(--line);border-radius:var(--radius);padding:32px 20px;text-align:center;background:var(--bg);transition:.15s}
+#drop.over{border-color:var(--accent);background:var(--accent-soft)}
+#drop h2{margin:0 0 6px;font-size:16px;font-weight:600}
+#drop p{margin:0;color:var(--muted);font-size:13px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end;margin-top:14px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],select{font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.stat{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card .thumb{height:132px;background:#0e1116 center/cover no-repeat;position:relative}
+.card .thumb .badge{position:absolute;left:8px;bottom:8px;font-size:10.5px;background:rgba(0,0,0,.68);color:#fff;
+  padding:2px 6px;border-radius:5px;font-weight:600}
+.card .body{padding:9px 11px}
+.card .nm{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.card .acts{display:flex;gap:6px;margin-top:8px}
+.gain{color:var(--good);font-weight:600}
+.lose{color:var(--accent);font-weight:600}
+.hint{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of PixelPress. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/qtswp" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get PixelPress — $19</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>PixelPress</h1>
+  <span class="tag">batch resize &amp; compress</span>
+  <span class="tag">no upload</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="panel">
+  <div id="drop">
+    <h2>Drop images here</h2>
+    <p>JPG · PNG · WebP · GIF · BMP — or <button class="mini" id="pick">browse files</button></p>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+  </div>
+  <div class="controls">
+    <div class="fld"><label>Max width (px)</label><input type="number" id="mw" value="1600" min="0" step="50"></div>
+    <div class="fld"><label>Max height (px)</label><input type="number" id="mh" value="1600" min="0" step="50"></div>
+    <div class="fld"><label>Output format</label>
+      <select id="fmt"><option value="image/jpeg">JPEG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></div>
+    <div class="fld"><label>Quality <span id="qv">0.80</span></label><input type="range" id="q" min="0.3" max="1" step="0.05" value="0.8"></div>
+    <div class="fld"><label>Name suffix</label><input type="text" id="suf" value="-min"></div>
+    <div class="fld"><label>&nbsp;</label><button id="run" class="primary">Process all</button></div>
+  </div>
+  <div class="bar">
+    <button id="zip" disabled>Download ZIP</button>
+    <button id="all" disabled>Download all</button>
+    <button id="clear" disabled>Clear</button>
+    <span class="stat" id="stat"></span>
+  </div>
+</div>
+
+<div class="panel" id="listPanel" style="display:none">
+  <h3>Results</h3>
+  <div class="grid" id="grid"></div>
+  <div id="tblWrap"></div>
+</div>
+
+<div class="panel">
+  <h3>How it works</h3>
+  <p class="hint" style="margin:0">
+    Everything runs inside this file using the browser canvas — your images are never uploaded anywhere.
+    Resize keeps aspect ratio (set one side to 0 to ignore it), quality only affects JPEG/WebP.
+    ZIP is built locally with stored (uncompressed) entries.
+  </p>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+var items=[];   // {name, file, img, blob, url, ow, oh, nw, nh, os, ns}
+
+/* ---------- ZIP (store) ---------- */
+var CRC=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(buf){var c=0xFFFFFFFF;for(var i=0;i<buf.length;i++)c=CRC[(c^buf[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipStore(files){
+  var parts=[],central=[],offset=0;
+  files.forEach(function(f){
+    var name=new TextEncoder().encode(f.name), data=new Uint8Array(f.data), crc=crc32(data);
+    var lh=new Uint8Array(30+name.length), dv=new DataView(lh.buffer);
+    dv.setUint32(0,0x04034b50,true);dv.setUint16(4,20,true);dv.setUint16(6,0x0800,true);
+    dv.setUint16(8,0,true);dv.setUint16(10,0,true);dv.setUint16(12,0x21,true);
+    dv.setUint32(14,crc,true);dv.setUint32(18,data.length,true);dv.setUint32(22,data.length,true);
+    dv.setUint16(26,name.length,true);dv.setUint16(28,0,true);lh.set(name,30);
+    var ch=new Uint8Array(46+name.length),cv=new DataView(ch.buffer);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+    cv.setUint16(8,0x0800,true);cv.setUint16(10,0,true);cv.setUint16(12,0,true);cv.setUint16(14,0x21,true);
+    cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);
+    cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);ch.set(name,46);
+    parts.push(lh,data);central.push(ch);offset+=lh.length+data.length;
+  });
+  var cSize=central.reduce(function(a,b){return a+b.length;},0);
+  var eh=new Uint8Array(22),ev=new DataView(eh.buffer);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cSize,true);ev.setUint32(16,offset,true);
+  return new Blob(parts.concat(central,[eh]),{type:"application/zip"});
+}
+
+/* ---------- io ---------- */
+function fmt(b){
+  if(b<1024)return b+" B";
+  if(b<1048576)return (b/1024).toFixed(0)+" KB";
+  return (b/1048576).toFixed(2)+" MB";
+}
+function base(n){return n.replace(/\.[^.]+$/,"");}
+function pick_(){$("file").click();}
+$("pick").onclick=function(e){e.stopPropagation();pick_();};
+$("drop").onclick=pick_;
+$("file").addEventListener("change",function(e){addFiles(e.target.files);});
+["dragenter","dragover"].forEach(function(ev){
+  $("drop").addEventListener(ev,function(e){e.preventDefault();$("drop").classList.add("over");});
+});
+["dragleave","drop"].forEach(function(ev){
+  $("drop").addEventListener(ev,function(e){e.preventDefault();if(ev==="dragleave"&&$("drop").contains(e.relatedTarget))return;$("drop").classList.remove("over");});
+});
+$("drop").addEventListener("drop",function(e){addFiles(e.dataTransfer.files);});
+
+function addFiles(files){
+  var arr=[].slice.call(files).filter(function(f){return /^image\//.test(f.type);});
+  if(!arr.length)return;
+  arr.forEach(function(f){
+    var url=URL.createObjectURL(f);
+    var it={name:f.name,file:f,src:url,blob:null,url:null,ow:0,oh:0,nw:0,nh:0,os:f.size,ns:0};
+    items.push(it);
+    var im=new Image();
+    im.onload=function(){it.ow=im.naturalWidth;it.oh=im.naturalHeight;render();run();};
+    im.onerror=function(){it.ow=0;it.oh=0;render();};
+    im.src=url;
+  });
+  render();
+  run();
+}
+
+function targetSize(w,h){
+  var mw=parseInt($("mw").value,10)||0, mh=parseInt($("mh").value,10)||0;
+  var s=1;
+  if(mw&&w>mw)s=Math.min(s,mw/w);
+  if(mh&&h>mh)s=Math.min(s,mh/h);
+  return [Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s))];
+}
+function ext(mime){return mime==="image/png"?".png":mime==="image/webp"?".webp":".jpg";}
+
+function run(force){
+  var fmtMime=$("fmt").value, q=parseFloat($("q").value), suf=$("suf").value;
+  var todo=0;
+  if(force)items.forEach(function(it){it.done=false;});
+  items.forEach(function(it){
+    if(!it.ow||it.done){return;}
+    it.done=true;
+    todo++;
+    var t=targetSize(it.ow,it.oh);it.nw=t[0];it.nh=t[1];
+    var c=document.createElement("canvas");c.width=it.nw;c.height=it.nh;
+    var ctx=c.getContext("2d");
+    if(fmtMime==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);}
+    ctx.imageSmoothingQuality="high";
+    var im=new Image();
+    im.onload=function(){
+      ctx.drawImage(im,0,0,it.nw,it.nh);
+      c.toBlob(function(b){
+        it.blob=b;it.url=URL.createObjectURL(b);it.ns=b.size;
+        it.out=base(it.name)+suf+ext(fmtMime);
+        todo--;render();if(!todo)$("stat").textContent=summary();
+      },fmtMime,fmtMime==="image/png"?undefined:q);
+    };
+    im.src=it.src;
+  });
+  render();
+}
+function summary(){
+  var o=0,n=0,done=0;
+  items.forEach(function(it){o+=it.os;if(it.blob){n+=it.ns;done++;}});
+  if(!done)return items.length+" file(s) queued";
+  var pct=o?Math.round((1-n/o)*100):0;
+  return done+"/"+items.length+" done · "+fmt(o)+" → "+fmt(n)+(pct>0?" (saved "+pct+"%)":"");
+}
+
+function render(){
+  var g=$("grid");
+  $("listPanel").style.display=items.length?"":"none";
+  g.innerHTML=items.map(function(it,i){
+    var pct=(it.blob&&it.os)?Math.round((1-it.ns/it.os)*100):null;
+    var cls=pct===null?"":(pct>=0?"gain":"lose");
+    var sizeTxt=it.ow?it.ow+"×"+it.oh:"…";
+    var newTxt=it.blob?it.nw+"×"+it.nh+" · "+fmt(it.ns)+(pct!==null?" ("+(pct>=0?"-":"+")+Math.abs(pct)+"%)":""):"processing…";
+    return '<div class="card"><div class="thumb" style="background-image:url('+(it.url||it.src)+')">'+
+      (pct!==null?'<span class="badge '+cls+'">'+(pct>=0?"-":"+")+Math.abs(pct)+'%</span>':"")+'</div>'+
+      '<div class="body"><div class="nm" title="'+it.name+'">'+(it.out||it.name)+'</div>'+
+      '<div class="meta">'+sizeTxt+' →<br>'+newTxt+'</div>'+
+      '<div class="acts"><button class="mini" data-dl="'+i+'" '+(it.blob?"":"disabled")+'>Download</button>'+
+      '<button class="mini" data-rm="'+i+'">Remove</button></div></div></div>';
+  }).join("");
+  var done=items.filter(function(it){return it.blob;}).length;
+  $("zip").disabled=done===0;$("all").disabled=done===0;$("clear").disabled=items.length===0;
+  $("stat").textContent=summary();
+}
+$("grid").addEventListener("click",function(e){
+  var d=e.target.closest("[data-dl]"),r=e.target.closest("[data-rm]");
+  if(d){var it=items[+d.dataset.dl];dl(it.url,it.out);}
+  if(r){var i=+r.dataset.rm;URL.revokeObjectURL(items[i].src);items.splice(i,1);render();}
+});
+function dl(url,name){var a=document.createElement("a");a.href=url;a.download=name;a.click();}
+function saveBlob(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);}
+
+$("q").addEventListener("input",function(){$("qv").textContent=parseFloat(this.value).toFixed(2);});
+["mw","mh","fmt","q","suf"].forEach(function(id){$(id).addEventListener("change",function(){if(items.length)run(true);});});
+$("run").onclick=function(){run(true);};
+$("clear").onclick=function(){items.forEach(function(it){URL.revokeObjectURL(it.src);});items=[];render();};
+$("all").onclick=function(){items.forEach(function(it){if(it.blob)dl(it.url,it.out);});};
+$("zip").onclick=function(){
+  var ready=items.filter(function(it){return it.blob;});
+  var reads=ready.map(function(it){
+    return new Promise(function(res){
+      var fr=new FileReader();fr.onload=function(){res({name:it.out,data:fr.result});};fr.readAsArrayBuffer(it.blob);
+    });
+  });
+  Promise.all(reads).then(function(files){
+    saveBlob(zipStore(files),"pixelpress-images.zip");
+  });
+};
+$("theme").onclick=function(){
+  var d=document.documentElement.dataset.theme==="dark";
+  document.documentElement.dataset.theme=d?"":"dark";$("theme").textContent=d?"Dark":"Light";
+};
+})();
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">PixelPress is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$19</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/qtswp" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get PixelPress — $19</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
