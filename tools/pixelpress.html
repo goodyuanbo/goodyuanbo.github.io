@@ -277,7 +277,48 @@ $("theme").onclick=function(){
 };
 })();
 </script>
-
+<script id="yb-i18n" data-note="i18n by Yuanbo">
+(function(){
+if(window.__ybI18N)return;window.__ybI18N=1;
+var D={"zh":{"batch resize & compress":"批量缩放与压缩","no upload":"不上传","Dark":"深色","Drop images here":"把图片拖到这里","browse files":"浏览文件","Max width (px)":"最大宽度（px）","Max height (px)":"最大高度（px）","Output format":"输出格式","Name suffix":"文件名后缀","Process all":"处理全部","Download ZIP":"下载 ZIP","Download all":"全部下载","Clear":"清空","Results":"结果","How it works":"工作原理","Everything runs inside this file using the browser canvas — your images are never uploaded anywhere. Resize keeps aspect ratio (set one side to 0 to ignore it), quality only affects JPEG/WebP. ZIP is built locally with stored (uncompressed) entries.":"一切都在本文件的浏览器 canvas 中完成 —— 图片绝不会上传。缩放保持宽高比（把某一边设为 0 则忽略），质量只影响 JPEG/WebP。ZIP 在本地打包（不压缩存储）。"},"ja":{"batch resize & compress":"一括リサイズと圧縮","no upload":"アップロードなし","Dark":"ダーク","Drop images here":"ここに画像をドロップ","browse files":"ファイルを選択","Max width (px)":"最大幅（px）","Max height (px)":"最大高さ（px）","Output format":"出力形式","Name suffix":"ファイル名の接尾辞","Process all":"すべて処理","Download ZIP":"ZIP をダウンロード","Download all":"すべてダウンロード","Clear":"クリア","Results":"結果","How it works":"仕組み","Everything runs inside this file using the browser canvas — your images are never uploaded anywhere. Resize keeps aspect ratio (set one side to 0 to ignore it), quality only affects JPEG/WebP. ZIP is built locally with stored (uncompressed) entries.":"すべてこのファイル内のブラウザ canvas で処理され、画像はどこにもアップロードされません。リサイズはアスペクト比を維持（0 で無視）、品質は JPEG/WebP のみに影響。ZIP はローカルで（無圧縮で）作成されます。"},"ko":{"batch resize & compress":"일괄 크기 조정 및 압축","no upload":"업로드 없음","Dark":"다크","Drop images here":"여기에 이미지를 끌어다 놓기","browse files":"파일 찾아보기","Max width (px)":"최대 너비(px)","Max height (px)":"최대 높이(px)","Output format":"출력 형식","Name suffix":"파일 이름 접미사","Process all":"모두 처리","Download ZIP":"ZIP 다운로드","Download all":"모두 다운로드","Clear":"지우기","Results":"결과","How it works":"작동 방식","Everything runs inside this file using the browser canvas — your images are never uploaded anywhere. Resize keeps aspect ratio (set one side to 0 to ignore it), quality only affects JPEG/WebP. ZIP is built locally with stored (uncompressed) entries.":"모든 처리가 이 파일 안의 브라우저 캔버스에서 이루어지며, 이미지는 절대 업로드되지 않습니다. 크기 조정은 비율을 유지하고(한쪽을 0으로 하면 무시), 품질은 JPEG/WebP에만 적용됩니다. ZIP은 로컬에서 무압축으로 생성됩니다."},"es":{"batch resize & compress":"redimensionar y comprimir por lotes","no upload":"sin subidas","Dark":"Oscuro","Drop images here":"Suelta imágenes aquí","browse files":"explorar archivos","Max width (px)":"Ancho máx. (px)","Max height (px)":"Alto máx. (px)","Output format":"Formato de salida","Name suffix":"Sufijo del nombre","Process all":"Procesar todo","Download ZIP":"Descargar ZIP","Download all":"Descargar todo","Clear":"Limpiar","Results":"Resultados","How it works":"Cómo funciona","Everything runs inside this file using the browser canvas — your images are never uploaded anywhere. Resize keeps aspect ratio (set one side to 0 to ignore it), quality only affects JPEG/WebP. ZIP is built locally with stored (uncompressed) entries.":"Todo se ejecuta en el canvas del navegador dentro de este archivo: tus imágenes nunca se suben. El redimensionado mantiene la proporción (pon 0 para ignorar un lado) y la calidad solo afecta a JPEG/WebP. El ZIP se crea localmente sin compresión."}};
+var LANGS=[["en","EN"],["zh","中文"],["ja","日本語"],["ko","한국어"],["es","Español"]];
+function cur(){try{return localStorage.getItem("yb_i18n_lang")||"en"}catch(e){return "en"}}
+function norm(s){return s.replace(/\s+/g," ").trim().replace(/\u00a0/g," ")}
+function find(m,k){if(!k)return null;if(m[k])return m[k];if(k.slice(-1)===":"&&m[k.slice(0,-1)])return m[k.slice(0,-1)]+":";return null}
+function apply(){
+var lang=cur();var m=D[lang];if(!m)return;
+try{document.documentElement.lang=lang==="zh"?"zh-CN":(lang==="en"?"en":lang)}catch(e){}
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n;
+while(n=w.nextNode()){
+var raw=n.nodeValue;if(!raw)continue;var k=norm(raw);if(k.length<2)continue;
+var t=find(m,k);if(!t)continue;
+n.nodeValue=(raw.match(/^\s*/)||[""])[0]+t+(raw.match(/\s*$/)||[""])[0];
+}
+var els=document.querySelectorAll("[placeholder],[title],[aria-label]");
+for(var i=0;i<els.length;i++){var el=els[i];
+["placeholder","title","aria-label"].forEach(function(a){
+var v=el.getAttribute&&el.getAttribute(a);if(!v)return;var t=find(m,norm(v));if(t)el.setAttribute(a,t);
+});
+}
+try{var t2=find(m,norm(document.title||""));if(t2)document.title=t2}catch(e){}
+}
+function mkUI(){
+if(document.getElementById("yb-i18n-box"))return;
+var box=document.createElement("div");box.id="yb-i18n-box";
+var sel=document.createElement("select");sel.id="yb-i18n-sel";sel.setAttribute("aria-label","Language");
+LANGS.forEach(function(l){var o=document.createElement("option");o.value=l[0];o.textContent=l[1];sel.appendChild(o);});
+sel.value=cur();
+sel.addEventListener("change",function(){try{localStorage.setItem("yb_i18n_lang",sel.value)}catch(e){}apply();});
+box.appendChild(sel);document.body.appendChild(box);
+var st=document.createElement("style");st.textContent="#yb-i18n-box{position:fixed;right:12px;bottom:12px;z-index:2147483000;background:rgba(11,28,51,.92);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:2px 4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}#yb-i18n-box select{background:transparent;color:#eaf1fb;border:0;outline:0;font:600 12px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;padding:4px 8px;cursor:pointer;appearance:auto}#yb-i18n-box select option{color:#111;background:#fff}";
+document.head.appendChild(st);
+}
+function boot(){mkUI();apply();
+var tm;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(apply,120);}).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+})();
+</script>
 <div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
   <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">PixelPress is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$19</b> — or grab all our tools in one bundle.</div>
