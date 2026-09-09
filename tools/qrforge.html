@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QRForge — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --warn:#c9891f; --bad:#d9432f;
+  --blue:#378add; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --warn:#e0b34d; --bad:#f0806c; --blue:#85b7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.15s}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.06)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.mini{padding:3px 9px;font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+input[type=number],input[type=text],input[type=email],input[type=url],input[type=date],select{
+  font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+textarea{font:inherit;font-size:13px;padding:9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%;resize:vertical;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+input[type=color]{border:1px solid var(--line);background:var(--bg);border-radius:8px;
+  width:100%;height:33px;padding:2px;cursor:pointer}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.stat{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;
+  word-break:break-word;max-height:460px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:21px;font-weight:650;margin-top:3px;letter-spacing:-.4px}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:6px}
+td{padding:6px;border-top:1px solid var(--line)}
+.num{text-align:right}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;font-weight:600}
+.pill.ok{background:var(--accent-soft);color:var(--good)}
+.pill.no{background:var(--accent-soft);color:var(--bad)}
+.pill.mid{background:var(--accent-soft);color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{padding:5px 11px;font-size:12.5px;border-radius:99px}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pane{display:none}
+.pane.on{display:block}
+#stage{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;display:flex;align-items:center;justify-content:center;min-height:280px}
+#cv{max-width:100%;height:auto;image-rendering:pixelated;border-radius:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inline{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted)}
+#warnbox{margin-top:10px;font-size:12px;color:var(--warn);display:none}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of QRForge. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/qrforge" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get QRForge — $17</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>QRForge</h1>
+  <span class="tag">Batch QR codes you actually own</span>
+  <span class="tag">100% offline</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>Content type</h3>
+    <div class="tabs" id="tabs">
+      <button data-t="url" class="on">URL</button>
+      <button data-t="text">Text</button>
+      <button data-t="wifi">WiFi</button>
+      <button data-t="vcard">vCard</button>
+      <button data-t="email">Email</button>
+      <button data-t="phone">Phone</button>
+      <button data-t="sms">SMS</button>
+    </div>
+
+    <div class="pane on" data-p="url">
+      <div class="fld"><label>Website URL</label>
+        <input type="text" id="f_url" value="https://qrforge.app" placeholder="https://example.com"></div>
+    </div>
+
+    <div class="pane" data-p="text">
+      <div class="fld"><label>Plain text</label>
+        <textarea id="f_text" rows="4" placeholder="Anything you want to encode">Hello from QRForge. This runs entirely in your browser.</textarea></div>
+    </div>
+
+    <div class="pane" data-p="wifi">
+      <div class="row2">
+        <div class="fld"><label>Network name (SSID)</label><input type="text" id="f_ssid" value="CafeGuest"></div>
+        <div class="fld"><label>Encryption</label>
+          <select id="f_enc"><option value="WPA">WPA / WPA2</option><option value="WEP">WEP</option><option value="nopass">Open (none)</option></select></div>
+      </div>
+      <div class="fld" style="margin-top:12px"><label>Password</label><input type="text" id="f_pass" value="coffee2026"></div>
+      <div class="inline" style="margin-top:10px"><input type="checkbox" id="f_hidden"><label for="f_hidden" style="text-transform:none;font-size:12.5px">Hidden network</label></div>
+    </div>
+
+    <div class="pane" data-p="vcard">
+      <div class="row2">
+        <div class="fld"><label>Full name</label><input type="text" id="f_name" value="Ada Lovelace"></div>
+        <div class="fld"><label>Phone</label><input type="text" id="f_tel" value="+1 415 555 0132"></div>
+      </div>
+      <div class="row2" style="margin-top:12px">
+        <div class="fld"><label>Email</label><input type="text" id="f_mail" value="ada@example.com"></div>
+        <div class="fld"><label>Company</label><input type="text" id="f_org" value="Analytical Engines Ltd"></div>
+      </div>
+      <div class="fld" style="margin-top:12px"><label>Website</label><input type="text" id="f_site" value="https://example.com"></div>
+    </div>
+
+    <div class="pane" data-p="email">
+      <div class="fld"><label>Email address</label><input type="text" id="f_eto" value="hello@example.com"></div>
+      <div class="fld" style="margin-top:12px"><label>Subject</label><input type="text" id="f_esub" value="Question about QRForge"></div>
+      <div class="fld" style="margin-top:12px"><label>Body</label><textarea id="f_ebody" rows="3">Hi, I scanned your code…</textarea></div>
+    </div>
+
+    <div class="pane" data-p="phone">
+      <div class="fld"><label>Phone number</label><input type="text" id="f_pnum" value="+1 415 555 0132"></div>
+    </div>
+
+    <div class="pane" data-p="sms">
+      <div class="fld"><label>Phone number</label><input type="text" id="f_snum" value="+1 415 555 0132"></div>
+      <div class="fld" style="margin-top:12px"><label>Message</label><textarea id="f_smsg" rows="3">I'm here.</textarea></div>
+    </div>
+
+    <div class="bar">
+      <button class="mini" id="sample">Load sample</button>
+      <button class="mini" id="copyp">Copy payload</button>
+      <span class="stat" id="plen">0 bytes</span>
+    </div>
+    <div class="out" id="payload" style="margin-top:10px;max-height:150px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Design</h3>
+    <div class="controls">
+      <div class="fld"><label>Foreground</label><input type="color" id="s_fg" value="#111111"></div>
+      <div class="fld"><label>Background</label><input type="color" id="s_bg" value="#ffffff"></div>
+      <div class="fld"><label>Size (px)</label><input type="number" id="s_size" value="512" min="80" max="2048" step="16"></div>
+      <div class="fld"><label>Error correction</label>
+        <select id="s_ec"><option value="L">L — 7%</option><option value="M" selected>M — 15%</option><option value="Q">Q — 25%</option><option value="H">H — 30%</option></select></div>
+      <div class="fld"><label>Quiet zone</label><input type="number" id="s_margin" value="4" min="0" max="12"></div>
+      <div class="fld"><label>Module shape</label>
+        <select id="s_shape"><option value="square">Square</option><option value="dot">Rounded dots</option></select></div>
+      <div class="fld"><label>Logo size</label><input type="range" id="s_logo" value="0" min="0" max="34" step="1"></div>
+      <div class="fld"><label>Logo text (1-2 letters)</label><input type="text" id="s_ltext" value="QF" maxlength="2" placeholder="or upload"></div>
+    </div>
+    <div class="bar">
+      <input type="file" id="s_logoimg" accept="image/*" style="font-size:12px">
+      <button class="mini" id="clearlogo">Clear logo</button>
+    </div>
+    <div id="warnbox"></div>
+
+    <div id="stage" style="margin-top:14px"><canvas id="cv" width="512" height="512"></canvas></div>
+    <div class="bar">
+      <button class="primary" id="dl">Download PNG</button>
+      <button id="dlbulk">Bulk export ZIP</button>
+      <span class="stat" id="info">—</span>
+    </div>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="k">Version</div><div class="v" id="k_ver">—</div><div class="s" id="k_size">—</div></div>
+  <div class="kpi"><div class="k">Error correction</div><div class="v" id="k_ec">—</div><div class="s" id="k_eclevel">—</div></div>
+  <div class="kpi"><div class="k">Modules</div><div class="v" id="k_mod">—</div><div class="s">data matrix</div></div>
+  <div class="kpi"><div class="k">Bulk queue</div><div class="v" id="k_bulk">0</div><div class="s">codes ready</div></div>
+</div>
+
+<div class="panel">
+  <h3>Bulk mode — one code per line</h3>
+  <textarea id="bulk" rows="7" placeholder="https://example.com/a&#10;https://example.com/b&#10;WIFI:T:WPA;S:Shop;P:guest1234;;"></textarea>
+  <div class="controls" style="margin-top:12px">
+    <div class="fld"><label>Error correction</label>
+      <select id="b_ec"><option value="L">L</option><option value="M" selected>M</option><option value="Q">Q</option><option value="H">H</option></select></div>
+    <div class="fld"><label>Size (px)</label><input type="number" id="b_size" value="512" min="80" max="2048" step="16"></div>
+    <div class="fld"><label>File prefix</label><input type="text" id="b_prefix" value="qr"></div>
+    <div class="fld"><label>&nbsp;</label><button class="primary" id="b_go">Generate &amp; download</button></div>
+  </div>
+  <div class="hint" style="margin-top:10px">Each non-empty line becomes one QR code. All are packed into a single .zip (store, no compression). Style settings above apply. If ZIP packing is unavailable in your browser, every file downloads one by one instead.</div>
+  <table id="btab" style="display:none"><thead><tr><th>#</th><th>Content</th><th class="num">Version</th><th class="num">Status</th></tr></thead><tbody></tbody></table>
+</div>
+
+<footer>
+  <span>Everything runs in your browser. Nothing is uploaded.</span>
+  <span class="spacer"></span>
+  <span>Local-first · one-time purchase · no account</span>
+</footer>
+</div>
+<div id="toast"></div>
+<script>
+function $(id){return document.getElementById(id);}
+var _t;function toast(m){var e=$("toast");e.textContent=m;e.classList.add("show");
+  clearTimeout(_t);_t=setTimeout(function(){e.classList.remove("show");},1800);}
+function copy(txt,label){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast((label||"Copied")+" ✓");},
+      function(){fallbackCopy(txt,label);});
+  } else fallbackCopy(txt,label);
+}
+function fallbackCopy(txt,label){
+  var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast((label||"Copied")+" ✓");}catch(e){toast("Copy failed");}
+  document.body.removeChild(ta);
+}
+function dl(name,content,mime){
+  var b=new Blob([content],{type:mime||"text/plain;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1500);toast("Downloaded "+name);
+}
+function dlBlob(name,blob){
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(n,d){d=d===undefined?2:d;return Number(n).toLocaleString("en-US",
+  {minimumFractionDigits:d,maximumFractionDigits:d});}
+function money(n){return "$"+num(n,2);}
+var theme=localStorage.getItem("th")||"light";
+document.documentElement.setAttribute("data-theme",theme);
+$("theme").textContent=theme==="dark"?"Light":"Dark";
+$("theme").onclick=function(){
+  theme=theme==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",theme);
+  localStorage.setItem("th",theme);
+  $("theme").textContent=theme==="dark"?"Light":"Dark";
+};
+
+/* ===== QRForge QR encoder core (Byte mode, Version 1-10, L/M/Q/H) ===== */
+/* --- 1. GF(256) arithmetic, primitive polynomial 0x11D --- */
+var GF_EXP = new Array(512), GF_LOG = new Array(256);
+(function(){
+  var x = 1;
+  for(var i=0;i<255;i++){ GF_EXP[i] = x; GF_LOG[x] = i; x <<= 1; if(x & 0x100) x ^= 0x11D; }
+  for(var j=255;j<512;j++) GF_EXP[j] = GF_EXP[j-255];
+})();
+function gfMul(a,b){ if(a===0||b===0) return 0; return GF_EXP[GF_LOG[a] + GF_LOG[b]]; }
+function gfDiv(a,b){ if(b===0) throw new Error("gf div 0"); if(a===0) return 0;
+  return GF_EXP[(GF_LOG[a] + 255 - GF_LOG[b]) % 255]; }
+
+/* --- 2. Reed-Solomon generator polynomial --- */
+function rsDivisor(degree){
+  var res = new Array(degree); for(var i=0;i<degree;i++) res[i] = 0;
+  res[degree-1] = 1;
+  var root = 1;
+  for(var k=0;k<degree;k++){
+    for(var j=0;j<res.length;j++){
+      res[j] = gfMul(res[j], root);
+      if(j+1 < res.length) res[j] ^= res[j+1];
+    }
+    root = gfMul(root, 2);
+  }
+  return res;
+}
+/* --- 3. RS remainder (polynomial long division) --- */
+function rsRemainder(data, divisor){
+  var res = []; for(var i=0;i<divisor.length;i++) res.push(0);
+  for(var d=0; d<data.length; d++){
+    var factor = data[d] ^ res.shift();
+    res.push(0);
+    for(var j=0;j<divisor.length;j++) res[j] ^= gfMul(divisor[j], factor);
+  }
+  return res;
+}
+
+/* --- 4. Capacity tables (index 0 unused) --- */
+var ECC_PER_BLOCK = {
+  L:[-1, 7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30],
+  M:[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28],
+  Q:[-1,13,22,18,26,18,24,18,22,20,24,28,26,24,20,30,24,28,28,26,30,28,30,30,30,30,28,30,30,30,30,30,30,30,30,30,30,30,30,30],
+  H:[-1,17,28,22,16,22,28,26,26,24,28,24,28,22,24,24,30,28,28,26,28,30,24,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30]
+};
+var NUM_BLOCKS = {
+  L:[-1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 6, 7, 8, 8, 9, 9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24],
+  M:[-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47],
+  Q:[-1, 1, 1, 2, 2, 4, 4, 6, 6, 8, 8, 8,10,12,16,12,17,16,18,21,20,23,23,25,27,29,34,34,35,38,40,43,45,48,51,53,56,59,62,65],
+  H:[-1, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8,11,11,16,16,18,16,19,21,25,25,25,34,30,32,35,37,40,42,45,48,51,54,57,60,63,66,70,74,77]
+};
+var EC_FORMAT_BITS = { M:0, L:1, H:2, Q:3 };
+var MAX_VERSION = 10;
+
+/* total data+ecc codewords for a version */
+function rawCodewords(ver){
+  var result = (16*ver + 128)*ver + 64;
+  if(ver >= 2){
+    var numAlign = Math.floor(ver/7) + 2;
+    result -= (25*numAlign - 10)*numAlign - 55;
+    if(ver >= 7) result -= 36;
+  }
+  return Math.floor(result/8);
+}
+/* data codewords available for a version/ec level */
+function dataCapacity(ver, ecl){
+  return rawCodewords(ver) - ECC_PER_BLOCK[ecl][ver] * NUM_BLOCKS[ecl][ver];
+}
+
+/* --- 5. Data encoding: byte mode --- */
+function utf8Bytes(str){
+  var out = [], i, c;
+  for(i=0;i<str.length;i++){
+    c = str.charCodeAt(i);
+    if(c < 0x80) out.push(c);
+    else if(c < 0x800){ out.push(0xC0 | (c>>6), 0x80 | (c & 63)); }
+    else if(c >= 0xD800 && c <= 0xDBFF && i+1 < str.length){
+      var c2 = str.charCodeAt(i+1);
+      var cp = 0x10000 + ((c - 0xD800) << 10) + (c2 - 0xDC00);
+      out.push(0xF0 | (cp>>18), 0x80 | ((cp>>12) & 63), 0x80 | ((cp>>6) & 63), 0x80 | (cp & 63));
+      i++;
+    } else { out.push(0xE0 | (c>>12), 0x80 | ((c>>6) & 63), 0x80 | (c & 63)); }
+  }
+  return out;
+}
+function encodeBitStream(bytes, ver, ecl){
+  var bits = [], i;
+  function put(val, len){ for(var k=len-1;k>=0;k--) bits.push((val>>>k) & 1); }
+  put(4, 4);                                        // byte mode
+  put(bytes.length, ver < 10 ? 8 : 16);             // char count
+  for(i=0;i<bytes.length;i++) put(bytes[i], 8);
+  var capBits = dataCapacity(ver, ecl) * 8;
+  for(i=0;i<4 && bits.length < capBits;i++) bits.push(0);   // terminator
+  while(bits.length % 8 !== 0) bits.push(0);                // byte align
+  var codewords = [];
+  for(i=0;i<bits.length;i+=8){
+    var b = 0; for(var k=0;k<8;k++) b = (b<<1) | bits[i+k];
+    codewords.push(b);
+  }
+  var pads = [0xEC, 0x11], p = 0;
+  while(codewords.length < dataCapacity(ver, ecl)) codewords.push(pads[p++ % 2]);
+  return codewords;
+}
+
+/* --- 6. Interleave data + ecc codewords --- */
+function addEccAndInterleave(data, ver, ecl){
+  var numBlocks = NUM_BLOCKS[ecl][ver];
+  var eccLen = ECC_PER_BLOCK[ecl][ver];
+  var rawCw = rawCodewords(ver);
+  var numShort = numBlocks - rawCw % numBlocks;
+  var shortLen = Math.floor(rawCw / numBlocks);
+  var blocks = [], k = 0, i, j;
+  var div = rsDivisor(eccLen);
+  for(i=0;i<numBlocks;i++){
+    var len = shortLen - eccLen + (i < numShort ? 0 : 1);
+    var dat = data.slice(k, k + len); k += len;
+    var ecc = rsRemainder(dat, div);
+    if(i < numShort) dat.push(0);
+    blocks.push(dat.concat(ecc));
+  }
+  var result = [];
+  for(i=0;i<blocks[0].length;i++){
+    for(j=0;j<blocks.length;j++){
+      if(i !== shortLen - eccLen || j >= numShort) result.push(blocks[j][i]);
+    }
+  }
+  return result;
+}
+/* PART_A_END */
+/* --- 7-10. Matrix construction, placement, mask, format/version info --- */
+function getBit(x, i){ return ((x >>> i) & 1) !== 0; }
+
+function QRMatrix(ver, ecl){
+  this.version = ver;
+  this.ecl = ecl;
+  this.size = ver * 4 + 17;
+  this.modules = [];
+  this.isFn = [];
+  for(var y=0;y<this.size;y++){
+    this.modules.push(new Array(this.size).fill(false));
+    this.isFn.push(new Array(this.size).fill(false));
+  }
+}
+QRMatrix.prototype.setFn = function(x, y, dark){
+  this.modules[y][x] = dark; this.isFn[y][x] = true;
+};
+QRMatrix.prototype.drawFinder = function(x, y){
+  for(var dy=-4;dy<=4;dy++) for(var dx=-4;dx<=4;dx++){
+    var xx = x+dx, yy = y+dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+    if(xx>=0 && xx<this.size && yy>=0 && yy<this.size) this.setFn(xx, yy, d!==2 && d!==4);
+  }
+};
+QRMatrix.prototype.alignPositions = function(){
+  if(this.version === 1) return [];
+  var n = Math.floor(this.version/7) + 2;
+  var step = Math.ceil((this.version*4 + 4) / (n*2 - 2)) * 2;
+  var res = [6], pos = this.size - 7;
+  while(res.length < n){ res.splice(1, 0, pos); pos -= step; }
+  return res;
+};
+QRMatrix.prototype.drawAlign = function(x, y){
+  for(var dy=-2;dy<=2;dy++) for(var dx=-2;dx<=2;dx++)
+    this.setFn(x+dx, y+dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+};
+QRMatrix.prototype.drawFormatBits = function(mask){
+  var data = EC_FORMAT_BITS[this.ecl] << 3 | mask;
+  var rem = data, i;
+  for(i=0;i<10;i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+  var bits = (data << 10 | rem) ^ 0x5412;
+  for(i=0;i<=5;i++) this.setFn(8, i, getBit(bits, i));
+  this.setFn(8, 7, getBit(bits, 6));
+  this.setFn(8, 8, getBit(bits, 7));
+  this.setFn(7, 8, getBit(bits, 8));
+  for(i=9;i<15;i++) this.setFn(14-i, 8, getBit(bits, i));
+  for(i=0;i<8;i++) this.setFn(this.size-1-i, 8, getBit(bits, i));
+  for(i=8;i<15;i++) this.setFn(8, this.size-15+i, getBit(bits, i));
+  this.setFn(8, this.size-8, true);
+};
+QRMatrix.prototype.drawVersion = function(){
+  if(this.version < 7) return;
+  var rem = this.version, i;
+  for(i=0;i<12;i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1F25);
+  var bits = this.version << 12 | rem;
+  for(i=0;i<18;i++){
+    var bit = getBit(bits, i);
+    var a = this.size - 11 + i % 3, b = Math.floor(i/3);
+    this.setFn(a, b, bit); this.setFn(b, a, bit);
+  }
+};
+QRMatrix.prototype.drawFunctionPatterns = function(){
+  var i, j;
+  for(i=0;i<this.size;i++){ this.setFn(6, i, i%2===0); this.setFn(i, 6, i%2===0); }
+  this.drawFinder(3, 3); this.drawFinder(this.size-4, 3); this.drawFinder(3, this.size-4);
+  var pos = this.alignPositions(), n = pos.length;
+  for(i=0;i<n;i++) for(j=0;j<n;j++){
+    if((i===0&&j===0)||(i===0&&j===n-1)||(i===n-1&&j===0)) continue;
+    this.drawAlign(pos[i], pos[j]);
+  }
+  this.drawFormatBits(0);
+  this.drawVersion();
+};
+/* --- 8. Data placement: zigzag from bottom-right --- */
+QRMatrix.prototype.drawCodewords = function(data){
+  var i = 0, bitLen = data.length * 8;
+  for(var right = this.size-1; right >= 1; right -= 2){
+    if(right === 6) right = 5;
+    for(var vert = 0; vert < this.size; vert++){
+      for(var j = 0; j < 2; j++){
+        var x = right - j;
+        var upward = ((right + 1) & 2) === 0;
+        var y = upward ? this.size - 1 - vert : vert;
+        if(!this.isFn[y][x] && i < bitLen){
+          this.modules[y][x] = getBit(data[i >>> 3], 7 - (i & 7));
+          i++;
+        }
+      }
+    }
+  }
+};
+/* --- 9. Mask patterns --- */
+QRMatrix.prototype.applyMask = function(mask){
+  var invert;
+  for(var y=0;y<this.size;y++) for(var x=0;x<this.size;x++){
+    switch(mask){
+      case 0: invert = (x+y)%2===0; break;
+      case 1: invert = y%2===0; break;
+      case 2: invert = x%3===0; break;
+      case 3: invert = (x+y)%3===0; break;
+      case 4: invert = (Math.floor(x/3)+Math.floor(y/2))%2===0; break;
+      case 5: invert = (x*y)%2 + (x*y)%3 === 0; break;
+      case 6: invert = ((x*y)%2 + (x*y)%3)%2 === 0; break;
+      default: invert = ((x+y)%2 + (x*y)%3)%2 === 0; break;
+    }
+    if(!this.isFn[y][x] && invert) this.modules[y][x] = !this.modules[y][x];
+  }
+};
+var PEN_N1 = 3, PEN_N2 = 3, PEN_N3 = 40, PEN_N4 = 10;
+function fpAdd(run, hist){
+  if(hist[0] === 0) run += 1000;   // sentinel: light border before first run
+  hist.pop(); hist.unshift(run);
+}
+function fpCount(hist){
+  var n = hist[1];
+  var core = n > 0 && hist[2] === n && hist[3] === n*3 && hist[4] === n && hist[5] === n;
+  return (core && hist[0] >= n*4 && hist[6] >= n ? 1 : 0)
+       + (core && hist[6] >= n*4 && hist[0] >= n ? 1 : 0);
+}
+function fpTerm(color, run, hist){
+  if(color){ fpAdd(run, hist); run = 0; }
+  run += 1000;
+  fpAdd(run, hist);
+  return fpCount(hist);
+}
+QRMatrix.prototype.penalty = function(){
+  var result = 0, x, y, i;
+  for(y=0;y<this.size;y++){
+    var runColor = false, runX = 0, hist = [0,0,0,0,0,0,0];
+    for(x=0;x<this.size;x++){
+      if(this.modules[y][x] === runColor){
+        runX++;
+        if(runX === 5) result += PEN_N1; else if(runX > 5) result++;
+      } else {
+        fpAdd(runX, hist);
+        if(!runColor) result += fpCount(hist) * PEN_N3;
+        runColor = this.modules[y][x]; runX = 1;
+      }
+    }
+    result += fpTerm(runColor, runX, hist) * PEN_N3;
+  }
+  for(x=0;x<this.size;x++){
+    var rc = false, rx = 0, h2 = [0,0,0,0,0,0,0];
+    for(y=0;y<this.size;y++){
+      if(this.modules[y][x] === rc){
+        rx++;
+        if(rx === 5) result += PEN_N1; else if(rx > 5) result++;
+      } else {
+        fpAdd(rx, h2);
+        if(!rc) result += fpCount(h2) * PEN_N3;
+        rc = this.modules[y][x]; rx = 1;
+      }
+    }
+    result += fpTerm(rc, rx, h2) * PEN_N3;
+  }
+  for(y=0;y<this.size-1;y++) for(x=0;x<this.size-1;x++){
+    var c = this.modules[y][x];
+    if(c === this.modules[y][x+1] && c === this.modules[y+1][x] && c === this.modules[y+1][x+1]) result += PEN_N2;
+  }
+  var dark = 0;
+  for(y=0;y<this.size;y++) for(x=0;x<this.size;x++) if(this.modules[y][x]) dark++;
+  var total = this.size * this.size;
+  var k = Math.ceil(Math.abs(dark*20 - total*10) / total) - 1;
+  result += k * PEN_N4;
+  return result;
+};
+
+/* --- public: encode(text, ecl) -> {size, modules, version, ecl, mask} --- */
+function qrEncode(text, ecl){
+  ecl = ecl || "M";
+  if(!EC_FORMAT_BITS.hasOwnProperty(ecl)) throw new Error("bad EC level");
+  var bytes = utf8Bytes(String(text));
+  if(bytes.length === 0) throw new Error("empty content");
+  var ver = -1;
+  for(var v=1; v<=MAX_VERSION; v++){
+    var need = 4 + (v < 10 ? 8 : 16) + bytes.length * 8;
+    if(need <= dataCapacity(v, ecl) * 8){ ver = v; break; }
+  }
+  if(ver < 0) throw new Error("content too long for version 10");
+  var data = encodeBitStream(bytes, ver, ecl);
+  var all = addEccAndInterleave(data, ver, ecl);
+  var m = new QRMatrix(ver, ecl);
+  m.drawFunctionPatterns();
+  m.drawCodewords(all);
+  var best = 0, bestScore = Infinity;
+  for(var mask=0; mask<8; mask++){
+    m.applyMask(mask);
+    m.drawFormatBits(mask);
+    var s = m.penalty();
+    if(s < bestScore){ bestScore = s; best = mask; }
+    m.applyMask(mask);   // undo
+  }
+  m.applyMask(best);
+  m.drawFormatBits(best);
+  return { size: m.size, modules: m.modules, version: ver, ecl: ecl, mask: best };
+}
+if(typeof module !== "undefined" && module.exports) module.exports = { qrEncode: qrEncode, dataCapacity: dataCapacity, rawCodewords: rawCodewords };
+/* PART_B_END */
+
+/* ===== QRForge UI layer ===== */
+/* ---------- payload builders ---------- */
+var CUR_TYPE = "url";
+function wifiEsc(s){ return String(s||"").replace(/([\\;,:"])/g, "\\$1"); }
+function buildPayload(t){
+  t = t || CUR_TYPE;
+  if(t === "url"){
+    var u = $("f_url").value.trim();
+    if(u && !/^[a-z]+:/i.test(u)) u = "https://" + u;
+    return u;
+  }
+  if(t === "text") return $("f_text").value;
+  if(t === "wifi"){
+    var enc = $("f_enc").value, s = "WIFI:T:" + enc + ";S:" + wifiEsc($("f_ssid").value) + ";";
+    if(enc !== "nopass") s += "P:" + wifiEsc($("f_pass").value) + ";";
+    if($("f_hidden").checked) s += "H:true;";
+    return s + ";";
+  }
+  if(t === "vcard"){
+    var n = $("f_name").value.trim(), lines = ["BEGIN:VCARD","VERSION:3.0"];
+    var parts = n.split(/\s+/);
+    lines.push("N:" + (parts.length > 1 ? parts.slice(1).join(" ") + ";" + parts[0] : n) + ";;;");
+    lines.push("FN:" + n);
+    if($("f_org").value.trim()) lines.push("ORG:" + $("f_org").value.trim());
+    if($("f_tel").value.trim()) lines.push("TEL;TYPE=CELL:" + $("f_tel").value.trim());
+    if($("f_mail").value.trim()) lines.push("EMAIL:" + $("f_mail").value.trim());
+    if($("f_site").value.trim()) lines.push("URL:" + $("f_site").value.trim());
+    lines.push("END:VCARD");
+    return lines.join("\n");
+  }
+  if(t === "email"){
+    var to = $("f_eto").value.trim(), q = [];
+    if($("f_esub").value.trim()) q.push("subject=" + encodeURIComponent($("f_esub").value.trim()));
+    if($("f_ebody").value.trim()) q.push("body=" + encodeURIComponent($("f_ebody").value.trim()));
+    return "mailto:" + to + (q.length ? "?" + q.join("&") : "");
+  }
+  if(t === "phone") return "tel:" + $("f_pnum").value.trim().replace(/\s+/g, "");
+  if(t === "sms") return "SMSTO:" + $("f_snum").value.trim().replace(/\s+/g, "") + ":" + $("f_smsg").value;
+  return "";
+}
+function byteLen(s){ return new TextEncoder().encode(s).length; }
+
+/* ---------- canvas rendering ---------- */
+var LOGO_IMG = null;
+function getOpts(){
+  return {
+    fg: $("s_fg").value, bg: $("s_bg").value,
+    size: Math.max(80, Math.min(2048, parseInt($("s_size").value, 10) || 512)),
+    ec: $("s_ec").value,
+    margin: Math.max(0, Math.min(12, parseInt($("s_margin").value, 10) || 0)),
+    shape: $("s_shape").value,
+    logoRatio: (parseInt($("s_logo").value, 10) || 0) / 100,
+    logoText: $("s_ltext").value.trim()
+  };
+}
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+/* returns {canvas, scale, total} — draws qr with options */
+function drawQR(canvas, qr, o){
+  var S = qr.size, m = o.margin, total = S + m * 2;
+  var scale = Math.max(1, Math.floor(o.size / total));
+  var px = scale * total;
+  canvas.width = px; canvas.height = px;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = o.bg; ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = o.fg;
+  var x, y;
+  if(o.shape === "dot"){
+    var r = scale * 0.5;
+    for(y = 0; y < S; y++) for(x = 0; x < S; x++){
+      if(!qr.modules[y][x]) continue;
+      ctx.beginPath();
+      ctx.arc((x + m) * scale + r, (y + m) * scale + r, r * 0.92, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    for(y = 0; y < S; y++) for(x = 0; x < S; x++){
+      if(!qr.modules[y][x]) continue;
+      ctx.fillRect((x + m) * scale, (y + m) * scale, scale, scale);
+    }
+  }
+  /* center logo */
+  var lr = o.logoRatio || 0;
+  if(lr > 0){
+    var box = Math.round(px * lr), bx = Math.round((px - box) / 2), by = bx;
+    var pad = Math.max(2, Math.round(box * 0.09));
+    ctx.fillStyle = o.bg;
+    roundRect(ctx, bx - pad, by - pad, box + pad * 2, box + pad * 2, Math.round(box * 0.18));
+    ctx.fill();
+    if(LOGO_IMG){
+      try{ ctx.drawImage(LOGO_IMG, bx, by, box, box); } catch(e){}
+    } else if(o.logoText){
+      ctx.fillStyle = o.fg;
+      ctx.font = "700 " + Math.round(box * 0.52) + "px -apple-system,Segoe UI,Roboto,Arial,sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(o.logoText.slice(0, 2).toUpperCase(), px / 2, px / 2);
+    }
+  }
+  return { px: px, scale: scale, total: total };
+}
+
+/* ---------- live refresh ---------- */
+var CUR_QR = null;
+function refresh(){
+  var text = buildPayload();
+  $("payload").textContent = text;
+  var bl = byteLen(text);
+  $("plen").textContent = bl + " bytes";
+  var o = getOpts();
+  var warn = $("warnbox");
+  var msgs = [];
+  if(o.logoRatio > 0 && o.ec !== "H") msgs.push("A center logo covers data modules — switch Error correction to H for reliable scanning.");
+  if(o.logoRatio > 0.28) msgs.push("Logo above ~28% width may make the code unscannable.");
+  if(o.fg.toLowerCase() === o.bg.toLowerCase()) msgs.push("Foreground and background are the same colour.");
+  warn.style.display = msgs.length ? "block" : "none";
+  warn.innerHTML = msgs.map(function(s){ return esc(s); }).join("<br>");
+  try{
+    CUR_QR = qrEncode(text, o.ec);
+  } catch(e){
+    warn.style.display = "block";
+    warn.innerHTML = esc(e.message || String(e));
+    $("info").textContent = "—";
+    return;
+  }
+  var r = drawQR($("cv"), CUR_QR, o);
+  $("k_ver").textContent = "V" + CUR_QR.version;
+  $("k_size").textContent = r.px + " × " + r.px + " px";
+  $("k_ec").textContent = CUR_QR.ecl;
+  $("k_eclevel").textContent = ({L:"7% recovery",M:"15% recovery",Q:"25% recovery",H:"30% recovery"})[CUR_QR.ecl];
+  $("k_mod").textContent = CUR_QR.size + "²";
+  $("info").textContent = "V" + CUR_QR.version + " · " + CUR_QR.size + "×" + CUR_QR.size +
+    " modules · mask " + CUR_QR.mask + " · " + r.px + "px PNG";
+}
+/* ---------- ZIP (store, no compression) ---------- */
+var CRCTAB = (function(){
+  var t = new Uint32Array(256), n, k, c;
+  for(n = 0; n < 256; n++){
+    c = n;
+    for(k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(u8){
+  var c = 0xFFFFFFFF, i;
+  for(i = 0; i < u8.length; i++) c = CRCTAB[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function ascii(s){ return String(s).replace(/[^A-Za-z0-9._-]/g, "_"); }
+function zipStore(files){
+  /* files: [{name, data:Uint8Array}] -> Blob */
+  var enc = [], i, off = 0, locals = [], centrals = [];
+  var dosTime = 0x6000, dosDate = 0x5A21; /* 12:00:00 2025-01-01 */
+  function u16(v){ return [v & 255, (v >>> 8) & 255]; }
+  function u32(v){ return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+  for(i = 0; i < files.length; i++){
+    var nb = [];
+    for(var j = 0; j < files[i].name.length; j++) nb.push(files[i].name.charCodeAt(j) & 0x7F);
+    var data = files[i].data, crc = crc32(data), n = data.length;
+    var lh = [].concat(
+      u32(0x04034b50), u16(20), u16(0), u16(0), u16(dosTime), u16(dosDate),
+      u32(crc), u32(n), u32(n), u16(nb.length), u16(0), nb);
+    locals.push(new Uint8Array(lh), data);
+    var ch = [].concat(
+      u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(dosTime), u16(dosDate),
+      u32(crc), u32(n), u32(n), u16(nb.length), u16(0), u16(0), u16(0), u16(0), u32(0),
+      u32(off), nb);
+    centrals.push(new Uint8Array(ch));
+    off += lh.length + n;
+  }
+  var cdSize = 0, k;
+  for(k = 0; k < centrals.length; k++) cdSize += centrals[k].length;
+  var eocd = new Uint8Array([].concat(
+    u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length),
+    u32(cdSize), u32(off), u16(0)));
+  var parts = locals.concat(centrals, [eocd]);
+  return new Blob(parts, { type: "application/zip" });
+}
+/* ---------- bulk pipeline ---------- */
+function canvasToBytes(canvas){
+  return new Promise(function(res){
+    if(canvas.toBlob) canvas.toBlob(function(b){
+      if(b) b.arrayBuffer().then(function(ab){ res(new Uint8Array(ab)); });
+      else res(null);
+    }, "image/png");
+    else res(null);
+  });
+}
+function renderToCanvas(text, o){
+  var qr = qrEncode(text, o.ec);
+  var c = document.createElement("canvas");
+  drawQR(c, qr, o);
+  return c;
+}
+function runBulk(){
+  var lines = $("bulk").value.split(/\r?\n/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return s.length > 0; });
+  if(!lines.length){ toast("Nothing to generate"); return; }
+  var o = getOpts();
+  o.ec = $("b_ec").value;
+  o.size = Math.max(80, Math.min(2048, parseInt($("b_size").value, 10) || 512));
+  var prefix = ascii($("b_prefix").value || "qr");
+  var tb = $("btab").querySelector("tbody");
+  tb.innerHTML = ""; $("btab").style.display = "table";
+  var jobs = [], i;
+  for(i = 0; i < lines.length; i++){
+    var qr = null, err = "";
+    try{ qr = qrEncode(lines[i], o.ec); } catch(e){ err = e.message || String(e); }
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + (i + 1) + "</td><td class='mono'>" + esc(lines[i].slice(0, 70)) +
+      "</td><td class='num'>" + (qr ? "V" + qr.version : "—") + "</td><td class='num'>" +
+      (qr ? "<span class='pill ok'>ok</span>" : "<span class='pill no'>" + esc(err.slice(0, 24)) + "</span>") + "</td>";
+    tb.appendChild(tr);
+    if(qr) jobs.push({ name: prefix + "-" + ("00" + (i + 1)).slice(-3) + ".png", text: lines[i] });
+  }
+  $("k_bulk").textContent = String(jobs.length);
+  if(!jobs.length){ toast("All rows failed"); return; }
+  var out = [], idx = 0;
+  function next(){
+    if(idx >= jobs.length) return finish();
+    var job = jobs[idx++];
+    var bytes = canvasToBytes(renderToCanvas(job.text, o));
+    Promise.resolve(bytes).then(function(b){
+      if(b) out.push({ name: job.name, data: b });
+      next();
+    });
+  }
+  function finish(){
+    if(!out.length){ toast("PNG export failed"); return; }
+    try{
+      var blob = zipStore(out);
+      if(!blob || !blob.size) throw new Error("empty zip");
+      dlBlob(prefix + "-codes.zip", blob);
+      toast(out.length + " codes zipped ✓");
+      $("k_bulk").textContent = String(out.length);
+    } catch(e){
+      for(var i = 0; i < out.length; i++){
+        (function(f){
+          setTimeout(function(){
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(new Blob([f.data], { type: "image/png" }));
+            a.download = f.name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          }, i * 300);
+        })(out[i]);
+      }
+      toast("ZIP failed — downloading " + out.length + " files individually");
+    }
+  }
+  next();
+}
+
+/* ---------- events ---------- */
+function bindAll(){
+  var tabs = $("tabs").querySelectorAll("button"), i;
+  for(i = 0; i < tabs.length; i++){
+    tabs[i].onclick = (function(btn){
+      return function(){
+        var all = $("tabs").querySelectorAll("button"), k;
+        for(k = 0; k < all.length; k++) all[k].classList.remove("on");
+        btn.classList.add("on");
+        var panes = document.querySelectorAll(".pane");
+        for(k = 0; k < panes.length; k++)
+          panes[k].classList.toggle("on", panes[k].getAttribute("data-p") === btn.getAttribute("data-t"));
+        CUR_TYPE = btn.getAttribute("data-t");
+        refresh();
+      };
+    })(tabs[i]);
+  }
+  var inputs = document.querySelectorAll("input,select,textarea");
+  for(i = 0; i < inputs.length; i++){
+    if(inputs[i].id === "bulk") continue;
+    inputs[i].addEventListener("input", refresh);
+    inputs[i].addEventListener("change", refresh);
+  }
+  $("s_logoimg").addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0];
+    if(!f) return;
+    var url = URL.createObjectURL(f);
+    var img = new Image();
+    img.onload = function(){ LOGO_IMG = img; if(!(parseInt($("s_logo").value,10) > 0)) $("s_logo").value = 20; refresh(); };
+    img.onerror = function(){ toast("Could not read that image"); LOGO_IMG = null; };
+    img.src = url;
+  });
+  $("clearlogo").onclick = function(){ LOGO_IMG = null; $("s_logo").value = 0; $("s_logoimg").value = ""; refresh(); };
+  $("copyp").onclick = function(){ copy(buildPayload(), "Payload"); };
+  $("sample").onclick = function(){
+    if(CUR_TYPE === "url") $("f_url").value = "https://qrforge.app/launch?utm=print";
+    else if(CUR_TYPE === "text") $("f_text").value = "Scan me. This QR code was generated entirely in your browser — no server, no subscription.";
+    else if(CUR_TYPE === "wifi"){ $("f_ssid").value = "Studio-5G"; $("f_pass").value = "latte-2026"; $("f_enc").value = "WPA"; }
+    else if(CUR_TYPE === "vcard"){ $("f_name").value = "Grace Hopper"; $("f_tel").value = "+1 202 555 0180"; $("f_mail").value = "grace@example.com"; $("f_org").value = "Compiler Works"; $("f_site").value = "https://example.com"; }
+    else if(CUR_TYPE === "email"){ $("f_eto").value = "team@example.com"; $("f_esub").value = "Partnership"; $("f_ebody").value = "Hi — I found you via a QR code."; }
+    else if(CUR_TYPE === "phone") $("f_pnum").value = "+1 415 555 0132";
+    else if(CUR_TYPE === "sms"){ $("f_snum").value = "44123"; $("f_smsg").value = "TABLE 4"; }
+    refresh(); toast("Sample loaded");
+  };
+  $("dl").onclick = function(){
+    if(!CUR_QR){ toast("Nothing to export"); return; }
+    var o = getOpts();
+    drawQR($("cv"), CUR_QR, o);
+    $("cv").toBlob(function(b){
+      if(!b){ toast("Export failed"); return; }
+      dlBlob("qr-" + ascii(CUR_TYPE) + ".png", b);
+      toast("PNG downloaded ✓");
+    }, "image/png");
+  };
+  $("dlbulk").onclick = runBulk;
+  $("b_go").onclick = runBulk;
+  $("bulk").addEventListener("input", function(){
+    var n = $("bulk").value.split(/\r?\n/).filter(function(s){ return s.trim().length; }).length;
+    $("k_bulk").textContent = String(n);
+  });
+}
+if(typeof document !== "undefined"){
+  bindAll();
+  refresh();
+}
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">QRForge is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$17</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/qrforge" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get QRForge — $17</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
