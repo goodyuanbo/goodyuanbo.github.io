@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CleanSlate — free online, runs in your browser</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#fff; --ink:#1b1f24; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#d85a30; --accent-soft:#faece7; --good:#1d9e75; --blue:#378add; --red:#c0392b; --radius:12px;
+}
+html[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9edf2; --muted:#98a2b3; --line:#2b313b;
+  --accent:#f0997b; --accent-soft:#2a1d17; --good:#5dcaa5; --blue:#85b7eb; --red:#e06c60;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.2px}
+.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.spacer{flex:1}
+button{font:inherit;font-size:12.5px;padding:6px 11px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:.12s}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.mini{padding:3px 8px;font-size:12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:99px;border:1px solid var(--line);cursor:pointer;font-size:13px;background:var(--panel)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.panel h3{margin:0 0 10px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:7px}
+textarea{width:100%;min-height:230px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+input[type=text]{font:inherit;font-size:13px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.stat{font-size:12.5px;color:var(--muted);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+.stat b{color:var(--ink)}
+.diff{font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word;
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:520px;overflow:auto}
+.diff div{padding:1px 6px;border-radius:4px}
+.add{background:rgba(29,158,117,.16)}
+.del{background:rgba(192,57,43,.16);text-decoration:line-through;opacity:.85}
+.same{color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="freecta" style="position:sticky;top:0;z-index:9999;background:#14171c;color:#fff;border-bottom:3px solid #e8734a;">
+  <div style="max-width:1100px;margin:0 auto;padding:10px 18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;">
+    <div style="flex:1;min-width:240px;">You are using the <b style="color:#f0997b;">free online version</b> of CleanSlate. Download it to run offline with no limits and keep your data on your machine.</div>
+    <a href="https://boboyuan.gumroad.com/l/sdkhmi" style="background:#e8734a;color:#fff;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;white-space:nowrap;">Get CleanSlate — $15</a>
+  </div>
+</div>
+
+<div class="wrap">
+<header>
+  <h1>CleanSlate</h1><span class="tag">text cleanup</span><span class="tag">offline</span>
+  <span class="spacer"></span>
+  <button id="theme">Dark</button>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-t="clean">Clean</div>
+  <div class="tab" data-t="find">Find &amp; replace</div>
+  <div class="tab" data-t="diff">Diff</div>
+</div>
+
+<!-- CLEAN -->
+<div id="t-clean">
+  <div class="panel">
+    <h3>Operations (applied to the text below)</h3>
+    <div class="tools">
+      <button data-op="trim">Trim each line</button>
+      <button data-op="noempty">Remove empty lines</button>
+      <button data-op="spaces">Collapse spaces</button>
+      <button data-op="uniq">De-duplicate lines</button>
+      <button data-op="sortasc">Sort A→Z</button>
+      <button data-op="sortdesc">Sort Z→A</button>
+      <button data-op="sortlen">Sort by length</button>
+      <button data-op="shuffle">Shuffle</button>
+      <button data-op="reverse">Reverse lines</button>
+      <button data-op="upper">UPPERCASE</button>
+      <button data-op="lower">lowercase</button>
+      <button data-op="title">Title Case</button>
+      <button data-op="snake">snake_case</button>
+      <button data-op="kebab">kebab-case</button>
+      <button data-op="crlf">CRLF → LF</button>
+      <button data-op="tabs">Tabs → spaces</button>
+      <button data-op="nonascii">Strip non-ASCII</button>
+      <button data-op="num">Add line numbers</button>
+      <button data-op="stripnum">Strip line numbers</button>
+      <button data-op="emails">Extract emails</button>
+      <button data-op="urls">Extract URLs</button>
+      <button data-op="phones">Extract numbers</button>
+      <button data-op="json">Pretty-print JSON</button>
+      <button data-op="minify">Minify JSON</button>
+      <button data-op="csv2list">CSV → list</button>
+      <button data-op="b64e">Base64 encode</button>
+      <button data-op="b64d">Base64 decode</button>
+      <button data-op="urlenc">URL encode</button>
+      <button data-op="urldec">URL decode</button>
+    </div>
+    <div class="tools" style="margin-top:8px">
+      <input type="text" id="prefix" placeholder="prefix" style="width:130px">
+      <button data-op="addprefix">Add prefix</button>
+      <input type="text" id="suffix" placeholder="suffix" style="width:130px">
+      <button data-op="addsuffix">Add suffix</button>
+      <input type="text" id="wrap" placeholder="quote char" style="width:100px">
+      <button data-op="wraplines">Wrap lines</button>
+      <button data-op="undo">Undo</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Text</h3>
+    <textarea id="ta" spellcheck="false" placeholder="Paste anything here…"></textarea>
+    <div class="stat" id="stats"></div>
+    <div class="tools" style="margin-top:10px">
+      <button class="primary" id="copy">Copy</button>
+      <button id="download">Download .txt</button>
+      <button id="paste">Paste from clipboard</button>
+      <button id="sample">Load sample</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIND -->
+<div id="t-find" style="display:none">
+  <div class="panel">
+    <h3>Find &amp; replace (supports regex)</h3>
+    <div class="tools">
+      <input type="text" id="find" placeholder="find" style="width:230px">
+      <input type="text" id="repl" placeholder="replace with" style="width:230px">
+      <input type="text" id="flags" value="g" style="width:60px" title="flags">
+      <button class="primary" data-op="replace">Replace all</button>
+      <button data-op="replacefirst">Replace first</button>
+      <button data-op="keepmatch">Keep only matches</button>
+      <button data-op="delmatch">Delete matches</button>
+      <button data-op="count">Count matches</button>
+    </div>
+    <p class="hint">Examples: <code>\s+</code> · <code>^\d+\.</code> · <code>(?&lt;=price )\d+</code> · flags <code>gi</code> <code>gm</code></p>
+    <textarea id="ta2" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<!-- DIFF -->
+<div id="t-diff" style="display:none">
+  <div class="panel">
+    <h3>Line diff</h3>
+    <div class="two">
+      <textarea id="dA" placeholder="original text…" style="min-height:200px"></textarea>
+      <textarea id="dB" placeholder="changed text…" style="min-height:200px"></textarea>
+    </div>
+    <div class="tools" style="margin-top:10px">
+      <button class="primary" id="runDiff">Compare</button>
+      <button id="swap">Swap</button>
+      <button id="diffSample">Load sample</button>
+    </div>
+    <div class="diff" id="diffOut" style="margin-top:12px"></div>
+    <div class="stat" id="diffStat"></div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+var ta=$("ta"), hist=[];
+
+function lines(t){return t.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");}
+function unlines(a){return a.join("\n");}
+function push(){hist.push(ta.value);if(hist.length>60)hist.shift();}
+
+function stats(){
+  var t=ta.value;
+  var w=t.trim()?t.trim().split(/\s+/).length:0;
+  $("stats").innerHTML="chars <b>"+t.length+"</b> words <b>"+w+"</b> lines <b>"+(t?lines(t).length:0)+
+    "</b> bytes <b>"+new Blob([t]).size+"</b> unique lines <b>"+new Set(lines(t)).size+"</b>";
+}
+ta.addEventListener("input",stats);
+
+var OPS={
+  trim:function(t){return unlines(lines(t).map(function(l){return l.trim();}));},
+  noempty:function(t){return unlines(lines(t).filter(function(l){return l.trim()!=="";}));},
+  spaces:function(t){return unlines(lines(t).map(function(l){return l.replace(/[ \t]+/g," ");}));},
+  uniq:function(t){return unlines(Array.from(new Set(lines(t))));},
+  sortasc:function(t){return unlines(lines(t).sort(function(a,b){return a.localeCompare(b);}));},
+  sortdesc:function(t){return unlines(lines(t).sort(function(a,b){return b.localeCompare(a);}));},
+  sortlen:function(t){return unlines(lines(t).sort(function(a,b){return a.length-b.length;}));},
+  shuffle:function(t){var a=lines(t);for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=a[i];a[i]=a[j];a[j]=x;}return unlines(a);},
+  reverse:function(t){return unlines(lines(t).reverse());},
+  upper:function(t){return t.toUpperCase();},
+  lower:function(t){return t.toLowerCase();},
+  title:function(t){return t.replace(/\w[^\s]*/g,function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();});},
+  snake:function(t){return t.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"");},
+  kebab:function(t){return t.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");},
+  crlf:function(t){return t.replace(/\r\n?/g,"\n");},
+  tabs:function(t){return t.replace(/\t/g,"  ");},
+  nonascii:function(t){return t.replace(/[^\x00-\x7F]/g,"");},
+  num:function(t){return unlines(lines(t).map(function(l,i){return (i+1)+". "+l;}));},
+  stripnum:function(t){return unlines(lines(t).map(function(l){return l.replace(/^\s*\d+[.)]\s*/,"");}));},
+  emails:function(t){return (t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/g)||[]).join("\n");},
+  urls:function(t){return (t.match(/https?:\/\/[^\s<>"')]+/gi)||[]).join("\n");},
+  phones:function(t){return (t.match(/\d[\d\s().+-]{6,}\d/g)||[]).map(function(s){return s.trim();}).join("\n");},
+  json:function(t){try{return JSON.stringify(JSON.parse(t),null,2);}catch(e){return t;}},
+  minify:function(t){try{return JSON.stringify(JSON.parse(t));}catch(e){return t;}},
+  csv2list:function(t){return unlines(lines(t).map(function(l){return l.split(",").map(function(c){return c.trim();}).join("\n");}));},
+  b64e:function(t){try{return btoa(unescape(encodeURIComponent(t)));}catch(e){return t;}},
+  b64d:function(t){try{return decodeURIComponent(escape(atob(t.trim())));}catch(e){return t;}},
+  urlenc:function(t){return encodeURIComponent(t);},
+  urldec:function(t){try{return decodeURIComponent(t);}catch(e){return t;}},
+  addprefix:function(t){var p=$("prefix").value;return unlines(lines(t).map(function(l){return p+l;}));},
+  addsuffix:function(t){var s=$("suffix").value;return unlines(lines(t).map(function(l){return l+s;}));},
+  wraplines:function(t){var q=$("wrap").value||'"';return unlines(lines(t).map(function(l){return q+l.replace(new RegExp(q,"g"),"\\"+q)+q;}));},
+  undo:function(){return hist.length?hist.pop():ta.value;}
+};
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-op]");if(!b)return;
+  var op=b.dataset.op, target=(op.indexOf("replace")===0||["keepmatch","delmatch","count"].indexOf(op)>=0)?$("ta2"):ta;
+  if(op==="count"){
+    var re=rx();if(!re)return;
+    var m=target.value.match(re)||[];
+    alert(m.length+" match(es)");
+    return;
+  }
+  if(op.indexOf("replace")===0||op==="keepmatch"||op==="delmatch"){
+    var r=rx();if(!r)return;
+    push2(target);
+    if(op==="replacefirst")target.value=target.value.replace(r,$("repl").value);
+    else if(op==="replace")target.value=target.value.replace(r,$("repl").value);
+    else if(op==="keepmatch")target.value=(target.value.match(r)||[]).join("\n");
+    else target.value=target.value.replace(r,"");
+    ta.value=target===ta?target.value:ta.value;
+    if(target===$("ta2"))$("ta2").value=target.value;
+    stats();return;
+  }
+  push();
+  ta.value=OPS[op](ta.value);
+  stats();
+});
+function rx(){
+  var f=$("find").value;if(!f){alert("Nothing to find");return null;}
+  try{return new RegExp(f,$("flags").value||"g");}catch(e){alert("Bad regex: "+e.message);return null;}
+}
+var h2=[];
+function push2(t){h2.push(t.value);}
+
+/* tabs */
+document.querySelectorAll(".tab").forEach(function(tb){
+  tb.onclick=function(){
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("on");});
+    tb.classList.add("on");
+    ["clean","find","diff"].forEach(function(k){$("t-"+k).style.display=(k===tb.dataset.t)?"":"none";});
+    if(tb.dataset.t==="find"&&!$("ta2").value)$("ta2").value=ta.value;
+  };
+});
+
+/* buttons */
+$("copy").onclick=function(){
+  ta.select();
+  try{document.execCommand("copy");}catch(e){navigator.clipboard.writeText(ta.value);}
+  var b=$("copy"),t=b.textContent;b.textContent="Copied";setTimeout(function(){b.textContent=t;},1100);
+};
+$("download").onclick=function(){
+  var b=new Blob([ta.value],{type:"text/plain"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="cleanslate.txt";a.click();
+};
+$("paste").onclick=function(){navigator.clipboard.readText().then(function(t){push();ta.value=t;stats();});};
+$("clear").onclick=function(){push();ta.value="";stats();};
+$("sample").onclick=function(){
+  push();
+  ta.value="  Apple\n\n banana  \napple\n  Cherry  Pie \n\ncherry pie\norange\n  \n123 Main St, Springfield\ncontact: jane.doe+work@acme-studio.co.uk\nsee https://example.com/pricing?ref=a for details\nOrder 42 — total 1,299.00 USD";
+  stats();
+};
+
+/* diff (LCS) */
+function lcs(a,b){
+  var n=a.length,m=b.length;
+  var dp=[];for(var i=0;i<=n;i++)dp.push(new Array(m+1).fill(0));
+  for(i=1;i<=n;i++)for(var j=1;j<=m;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  var out=[],x=n,y=m;
+  while(x>0&&y>0){
+    if(a[x-1]===b[y-1]){out.unshift({t:"same",v:a[x-1]});x--;y--;}
+    else if(dp[x-1][y]>=dp[x][y-1]){out.unshift({t:"del",v:a[x-1]});x--;}
+    else{out.unshift({t:"add",v:b[y-1]});y--;}
+  }
+  while(x>0){out.unshift({t:"del",v:a[x-1]});x--;}
+  while(y>0){out.unshift({t:"add",v:b[y-1]});y--;}
+  return out;
+}
+$("runDiff").onclick=function(){
+  var A=lines($("dA").value),B=lines($("dB").value);
+  var d=lcs(A,B);
+  $("diffOut").innerHTML=d.map(function(x){
+    var p=x.t==="add"?"+ ":x.t==="del"?"- ":"  ";
+    return '<div class="'+x.t+'">'+p+esc(x.v)+'</div>';
+  }).join("")||'<div class="same">nothing to compare</div>';
+  var add=d.filter(function(x){return x.t==="add";}).length;
+  var del=d.filter(function(x){return x.t==="del";}).length;
+  $("diffStat").innerHTML="<b>"+add+"</b> added · <b>"+del+"</b> removed · <b>"+d.filter(function(x){return x.t==="same";}).length+"</b> unchanged";
+};
+function esc(s){return s.replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+$("swap").onclick=function(){var a=$("dA").value;$("dA").value=$("dB").value;$("dB").value=a;};
+$("diffSample").onclick=function(){
+  $("dA").value="Quarterly report\nRevenue: 12,400\nCosts: 8,100\nMargin: 34%\nOwner: Jane";
+  $("dB").value="Quarterly report\nRevenue: 14,900\nCosts: 8,100\nMargin: 45%\nOwner: Jane\nNext review: March";
+};
+$("theme").onclick=function(){
+  var d=document.documentElement.dataset.theme==="dark";
+  document.documentElement.dataset.theme=d?"":"dark";$("theme").textContent=d?"Dark":"Light";
+};
+stats();
+})();
+</script>
+
+<div style="max-width:1100px;margin:34px auto 0;padding:26px 20px;border:2px dashed #e8734a;border-radius:14px;background:rgba(232,115,74,.06);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Want this offline, with everything unlocked?</div>
+  <div style="opacity:.85;margin-bottom:16px;line-height:1.6;">CleanSlate is a single HTML file you download once and keep forever. No account, no subscription, no upload. Buy once for <b>$15</b> — or grab all our tools in one bundle.</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="https://boboyuan.gumroad.com/l/sdkhmi" style="background:#e8734a;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">Get CleanSlate — $15</a>
+    <a href="https://boboyuan.gumroad.com/l/etvqgf" style="border:1px solid #e8734a;color:#e8734a;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:700;">All tools bundle — $99</a>
+  </div>
+</div>
+
+</body>
+</html>
