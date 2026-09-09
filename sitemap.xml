@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://goodyuanbo.github.io/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/dropboard.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/pixelpress.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/cleanslate.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/markforge.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/a11ycheck.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/passforge.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/cronwhisper.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/jwtlens.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/reqforge.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/ragsplit.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goodyuanbo.github.io/tools/qrforge.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>
